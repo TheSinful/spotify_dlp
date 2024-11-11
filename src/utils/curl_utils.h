@@ -1,6 +1,6 @@
-
 #pragma once
 #ifndef CURL_UTILS_H
+#define CURL_UTILS_H
 
 #include <curl/curl.h>
 #include <string>

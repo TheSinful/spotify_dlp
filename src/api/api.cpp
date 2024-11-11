@@ -59,7 +59,7 @@ void SpotifyAPI::get_metadata(std::string url)
         this->metadata = this->fetch_album_metadata();
         break;
     case DownloadType::Playlist:
-        this->metadata =->fetch_playlist_metadata();
+        this->metadata = this->fetch_playlist_metadata();
         break;
     }
 }

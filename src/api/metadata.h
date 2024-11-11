@@ -1,3 +1,6 @@
+#ifndef METADATA_H 
+#define METADATA_H
+
 #include <optional>
 #include <string>
 #include <vector>
@@ -82,3 +85,5 @@ Artist Artist::serialize(const nlohmann::json &data)
 
     return artist;
 }
+
+#endif 
