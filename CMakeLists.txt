@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 project(spotify_dlp)
 
+include(CTest)
+enable_testing()
+
 include(FetchContent)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -20,23 +23,35 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(json)
 
+# Add Google Test
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG release-1.12.1
+)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
 # Add source files
 add_executable(${PROJECT_NAME} 
     src/main.cpp 
     src/api/api.cpp 
+    src/api/metadata.cpp
     src/utils/curl_utils.cpp
 )
 
 set(BUILD_SHARED_LIBS OFF)
 
-# Link libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     CURL::libcurl 
     nlohmann_json::nlohmann_json
+    GTest::gtest_main
 )
 
-# Include directories
 target_include_directories(${PROJECT_NAME} PRIVATE 
     ${CURL_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/include
 )
+
+# Add tests
+add_subdirectory(tests)
