@@ -11,23 +11,22 @@ public:
 private:
     void parse_url();
     void fetch_token();
-    TrackMetadata fetch_track_metadata(); 
-    AlbumMetadata fetch_album_metadata(); 
-    PlaylistMetadata fetch_playlist_metadata(); 
-    nlohmann::json fetch_raw_metadata(std::string endpoint); 
+    TrackMetadata fetch_track_metadata();
+    AlbumMetadata fetch_album_metadata();
+    PlaylistMetadata fetch_playlist_metadata();
+    nlohmann::json fetch_raw_metadata(std::string endpoint);
 
-    std::string validate_and_clean_url(const std::string& url); 
-    std::pair<std::string, std::string> split_url(const std::string& url); 
-    DownloadType determine_content_type(const std::string& type); 
+    std::string validate_and_clean_url(const std::string &url);
+    std::pair<std::string, std::string> split_url(const std::string &url);
+    DownloadType determine_content_type(const std::string &type);
 
-    std::string spotify_url;  
+    std::string spotify_url;
     std::string token;
     std::string client_id;
     std::string client_secret;
-    std::string item_id; 
+    std::string item_id;
     std::variant<TrackMetadata, AlbumMetadata, PlaylistMetadata> metadata;
     DownloadType download_type;
 
-    CurlGuard curl_guard; 
-
+    CurlGuard curl_guard;
 };
