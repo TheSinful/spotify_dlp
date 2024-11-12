@@ -5,89 +5,82 @@
 #include "api.h"
 #include "../utils/curl_utils.h"
 
-SpotifyAPI::SpotifyAPI(std::string client_id, std::string client_secret)
-{
-    CurlGuard guard;
-    this->curl_guard = guard;
-    this->client_id = client_id;
-    this->client_secret = client_secret;
-    this->fetch_token();
-}
-
-std::string base64_encode(const std::string &input)
-{
-    static const std::string base64_chars =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-    std::string encoded;
-    int val = 0;
-    int valb = -6;
-
-    for (unsigned char c : input)
-    {
-        val = (val << 8) + c;
-        valb += 8;
-        while (valb >= 0)
-        {
-            encoded.push_back(base64_chars[(val >> valb) & 0x3F]);
-            valb -= 6;
+namespace {
+    struct GlobalCurlInit {
+        GlobalCurlInit() {
+            if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) {
+                throw CurlException("Failed to initialize CURL globally");
+            }
         }
-    }
-
-    if (valb > -6)
-    {
-        encoded.push_back(base64_chars[((val << 8) >> (valb + 8)) & 0x3F]);
-    }
-
-    while (encoded.size() % 4)
-    {
-        encoded.push_back('=');
-    }
-
-    return encoded;
+        ~GlobalCurlInit() {
+            curl_global_cleanup();
+        }
+    };
+    
+    static GlobalCurlInit globalInit;
 }
 
-curl_slist *make_authorization_headers(const std::string &client_id, const std::string &client_secret)
+SpotifyAPI::SpotifyAPI(std::string client_id, std::string client_secret)
+    : client_id(std::move(client_id))
+    , client_secret(std::move(client_secret))
 {
-    std::string auth_string = client_id + ":" + client_secret;
-    std::string encoded = base64_encode(auth_string);
-    std::string auth_header = "Authorization: Basic " + encoded;
-
-    curl_slist *headers = nullptr;
-    headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
-    headers = curl_slist_append(headers, auth_header.c_str());
-    return headers;
+    fetch_token();
 }
 
 void SpotifyAPI::fetch_token()
 {
     std::string response;
-    std::string auth_credentials = "grant_type=client_credentials";
+    struct curl_slist *headers = nullptr;
+    headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
 
-    curl_slist *headers = make_authorization_headers(this->client_id, this->client_secret);
-    this->curl_guard.set_headers(headers);
+    std::string data = "grant_type=client_credentials&client_id=" + this->client_id +
+                       "&client_secret=" + this->client_secret;
+
     CURL *curl = this->curl_guard.get();
+    if (!curl)
+    {
+        throw CurlException("Failed to initialize CURL");
+    }
+
+    this->curl_guard.set_headers(headers);
+
+    // Add SSL verification options
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+    // Add verbose debug output
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
     curl_easy_setopt(curl, CURLOPT_URL, "https://accounts.spotify.com/api/token");
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, auth_credentials.c_str());
+    curl_easy_setopt(curl, CURLOPT_POST, 1L);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
+    // Check each setopt return value
     CURLcode res = curl_easy_perform(curl);
-
     if (res != CURLE_OK)
     {
-        throw CurlException("Failed to send request!" + res);
+        std::string error_msg = std::string("Failed to send request: ") +
+                                curl_easy_strerror(res) +
+                                " (" + std::to_string(res) + ")";
+        throw CurlException(error_msg);
     }
 
-    nlohmann::json json_response = nlohmann::json::parse(response);
-    if (json_response.contains("error"))
+    try
     {
-        throw CurlException("Error in response!" + json_response["error"].get<std::string>());
+        nlohmann::json json_response = nlohmann::json::parse(response);
+        if (json_response.contains("error"))
+        {
+            std::string error = json_response["error"].get<std::string>();
+            throw CurlException("API error: " + error);
+        }
+        this->token = json_response["access_token"].get<std::string>();
     }
-
-    this->token = json_response["access_token"].get<std::string>();
+    catch (const nlohmann::json::exception &e)
+    {
+        throw CurlException("Failed to parse response: " + std::string(e.what()));
+    }
 }
 
 void SpotifyAPI::get_metadata(std::string url)
