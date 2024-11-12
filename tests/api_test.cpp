@@ -53,3 +53,10 @@ TEST_F(SpotifyAPITest, DetermineContentTypeReturnsCorrectType)
     EXPECT_EQ(api.determine_content_type("playlist"), DownloadType::Playlist);
     EXPECT_THROW(api.determine_content_type("invalid"), std::runtime_error);
 }
+
+TEST_F(SpotifyAPITest, ValidateFetchToken)
+{
+    SpotifyAPI api(this->client_id, this->client_secret);
+    api.fetch_token();
+    EXPECT_FALSE(api.token.empty());
+}

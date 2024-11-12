@@ -25,8 +25,8 @@ private:
     FRIEND_TEST(SpotifyAPITest, ValidateAndCleanUrlThrowsOnSpotifyUri);
     FRIEND_TEST(SpotifyAPITest, SplitUrlParsesCorrectly);
     FRIEND_TEST(SpotifyAPITest, DetermineContentTypeReturnsCorrectType);
+    FRIEND_TEST(SpotifyAPITest, ValidateFetchToken);
 
-    // Moved from public to private
     std::string validate_and_clean_url(const std::string &url);
     std::pair<std::string, std::string> split_url(const std::string &url);
     DownloadType determine_content_type(const std::string &type);
