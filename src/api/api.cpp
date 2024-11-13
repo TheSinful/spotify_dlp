@@ -114,6 +114,7 @@ void SpotifyAPI::get_metadata(std::string url)
 TrackMetadata SpotifyAPI::fetch_track_metadata()
 {
     nlohmann::json response = this->fetch_raw_metadata("/tracks");
+
     return TrackMetadata::serialize(response);
 }
 
@@ -121,42 +122,14 @@ AlbumMetadata SpotifyAPI::fetch_album_metadata()
 {
     nlohmann::json response = this->fetch_raw_metadata("/albums");
 
-    AlbumMetadata data;
-    data.spotify_id = response["id"];
-    data.total_tracks = response["total_tracks"];
-    data.genres = response["genres"];
-    data.name = response["name"];
-    data.release_date = response["release_date"];
-    data.total_tracks = response["tracks"]["total"];
-    std::vector<Artist> artists;
-    for (const auto &artist_data : response["artists"])
-    {
-        artists.push_back(Artist::serialize(artist_data));
-    }
-    data.artists = artists;
-
-    return data;
+    return AlbumMetadata::serialize(response);
 }
 
 PlaylistMetadata SpotifyAPI::fetch_playlist_metadata()
 {
     nlohmann::json response = this->fetch_raw_metadata("/playlists");
 
-    PlaylistMetadata data;
-
-    data.total_tracks = response["tracks"]["total"];
-
-    std::vector<TrackMetadata> tracks;
-    for (const auto &item : response["tracks"]["items"])
-    {
-        tracks.push_back(TrackMetadata::serialize(item));
-    }
-
-    data.tracks = tracks;
-    data.spotify_id = response["id"];
-    data.cover = response["images"]["url"];
-
-    return data;
+    return PlaylistMetadata::serialize(response);
 }
 
 nlohmann::json SpotifyAPI::fetch_raw_metadata(std::string endpoint)

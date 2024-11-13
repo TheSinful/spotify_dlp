@@ -60,3 +60,98 @@ TEST_F(SpotifyAPITest, ValidateFetchToken)
     api.fetch_token();
     EXPECT_FALSE(api.token.empty());
 }
+
+TEST_F(SpotifyAPITest, SerializeArtistResponse)
+{
+    // grabbed from spotify docs (edited slightly to be 100% sure we read the right fields)
+    std::string test_response = R"({
+"external_urls": {
+    "spotify": "spotify_url", 
+    "youtube": "youtube_url"
+},
+"followers": {
+    "href": "string",
+    "total": 0
+},
+"genres": ["Prog rock", "Grunge"],
+"href": "string",
+"id": "test_id",
+"images": [
+    {
+    "url": "https://i.scdn.co/image/ab67616d00001e02ff9ca10b55ce82ae553c8228",
+    "height": 300,
+    "width": 300
+    }
+],
+"name": "test_name",
+"popularity": 0,
+"type": "artist",
+"uri": "test_uri"
+})";
+
+    auto to_json = nlohmann::json::parse(test_response);
+    Artist serialized = Artist::serialize(to_json);
+
+    Artist manually_serialized;
+    manually_serialized.external_urls = {"spotify_url", "youtube_url"};
+    manually_serialized.id = "test_id";
+    manually_serialized.name = "test_name";
+    manually_serialized.uri = "test_uri";
+
+    ASSERT_EQ(serialized, manually_serialized);
+}
+
+TEST_F(SpotifyAPITest, SerializeTrackResponse)
+{
+    std::string test_response = R"({
+  "track_number": 5,
+  "external_urls": {
+    "spotify": "test_external_url"
+  },
+  "id": "test_track_id",
+  "name": "test_track_name",
+  "album": {
+    "name": "test_album_name",
+    "id": "test_album_id",
+    "release_date": "1981-12",
+    "images": [
+      {
+        "url": "test_album_cover",
+        "height": 300,
+        "width": 300
+      }
+    ]
+  },
+  "artists": [
+    {
+      "external_urls": {
+        "spotify": "test_artist_url"
+      },
+      "id": "test_artist_id",
+      "name": "test_artist_name",
+      "uri": "test_artist_uri"
+    }
+  ],
+  "uri": "test_track_uri"
+})";
+
+    auto to_json = nlohmann::json::parse(test_response);
+    TrackMetadata serialized = TrackMetadata::serialize(to_json);
+
+    Artist artist;
+    artist.external_urls = {"test_artist_url"};
+    artist.id = "test_artist_id";
+    artist.name = "test_artist_name";
+    artist.uri = "test_artist_uri";
+
+    TrackMetadata expected;
+    expected.name = "test_track_name";
+    expected.artists = {artist};
+    expected.id = "test_track_id";
+    expected.album_name = "test_album_name";
+    expected.album_id = "test_album_id";
+    expected.external_urls = {"test_external_url"};
+    expected.track_number = 5;
+
+    ASSERT_EQ(serialized, expected);
+}
