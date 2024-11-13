@@ -4,31 +4,38 @@
 #include <stdexcept>
 #include "api.h"
 #include "../utils/curl_utils.h"
+#include "../utils/logger.h"
 
-namespace {
-    struct GlobalCurlInit {
-        GlobalCurlInit() {
-            if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) {
+namespace
+{
+    struct GlobalCurlInit
+    {
+        GlobalCurlInit()
+        {
+            if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK)
+            {
                 throw CurlException("Failed to initialize CURL globally");
             }
         }
-        ~GlobalCurlInit() {
+        ~GlobalCurlInit()
+        {
             curl_global_cleanup();
         }
     };
-    
+
     static GlobalCurlInit globalInit;
 }
 
 SpotifyAPI::SpotifyAPI(std::string client_id, std::string client_secret)
-    : client_id(std::move(client_id))
-    , client_secret(std::move(client_secret))
+    : client_id(std::move(client_id)), client_secret(std::move(client_secret))
 {
     fetch_token();
 }
 
 void SpotifyAPI::fetch_token()
 {
+    LOG_DEBUG("Fetching token for client ID: ", this->client_id);
+
     std::string response;
     struct curl_slist *headers = nullptr;
     headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
@@ -39,17 +46,15 @@ void SpotifyAPI::fetch_token()
     CURL *curl = this->curl_guard.get();
     if (!curl)
     {
-        throw CurlException("Failed to initialize CURL");
+        std::string log = "Failed to initialize CURL";
+        THROW_WITH_LOG(CurlException, log, log);
     }
 
     this->curl_guard.set_headers(headers);
 
-    // Add SSL verification options
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
-    // Add verbose debug output
     curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-
     curl_easy_setopt(curl, CURLOPT_URL, "https://accounts.spotify.com/api/token");
     curl_easy_setopt(curl, CURLOPT_POST, 1L);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
@@ -57,15 +62,16 @@ void SpotifyAPI::fetch_token()
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
-    // Check each setopt return value
     CURLcode res = curl_easy_perform(curl);
     if (res != CURLE_OK)
     {
-        std::string error_msg = std::string("Failed to send request: ") +
-                                curl_easy_strerror(res) +
-                                " (" + std::to_string(res) + ")";
-        throw CurlException(error_msg);
+        std::string base_msg = "Failed to send request to fetch authorization token for spotify.";
+        std::string verbose_msg = base_msg + curl_easy_strerror(res) + " (" + std::to_string(res) + ")";
+        THROW_WITH_LOG(CurlException, base_msg, verbose_msg);
     }
+
+    std::string obtain_msg = "Successfully obtained spotify access token";
+    LOG_INFO(obtain_msg, obtain_msg);
 
     try
     {
@@ -73,13 +79,16 @@ void SpotifyAPI::fetch_token()
         if (json_response.contains("error"))
         {
             std::string error = json_response["error"].get<std::string>();
-            throw CurlException("API error: " + error);
+            std::string base_log = "Spotify API Error.";
+            THROW_WITH_LOG(CurlException, base_log, base_log + error);
         }
         this->token = json_response["access_token"].get<std::string>();
     }
     catch (const nlohmann::json::exception &e)
     {
-        throw CurlException("Failed to parse response: " + std::string(e.what()));
+
+        std::string msg = "Failed to parse response from spotify auth token request.";
+        THROW_WITH_LOG(CurlException, msg, msg + std::string(e.what()));
     }
 }
 

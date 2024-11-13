@@ -8,6 +8,7 @@
 // Callback function for CURL write operations
 size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
 
+// Exception indicating an issue with a CURL request
 class CurlException : public std::exception
 {
     std::string msg;
@@ -19,7 +20,6 @@ public:
 };
 
 // RAII wrapper for CURL handles
-// curl_utils.h
 class CurlGuard
 {
 public:

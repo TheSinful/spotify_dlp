@@ -32,6 +32,14 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+# Add spdlog 
+FetchContent_Declare(
+    spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG v1.12.0
+)
+FetchContent_MakeAvailable(spdlog)
+
 # Add source files
 add_executable(${PROJECT_NAME} 
     src/main.cpp 
@@ -46,6 +54,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     CURL::libcurl 
     nlohmann_json::nlohmann_json
     GTest::gtest_main
+    spdlog::spdlog
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
