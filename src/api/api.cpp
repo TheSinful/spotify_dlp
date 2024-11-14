@@ -114,7 +114,6 @@ void SpotifyAPI::get_metadata(std::string url)
 TrackMetadata SpotifyAPI::fetch_track_metadata()
 {
     nlohmann::json response = this->fetch_raw_metadata("/tracks");
-
     return TrackMetadata::serialize(response);
 }
 

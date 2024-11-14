@@ -49,19 +49,31 @@ AlbumMetadata AlbumMetadata::serialize(const nlohmann::json &data)
 {
     AlbumMetadata album;
     album.name = data["name"];
+    album.id = data["id"];
+    album.release_date = data["release_date"];
+    album.total_tracks = data["total_tracks"];
+
+    // Parse artists
     std::vector<Artist> artists;
     for (const auto &artist : data["artists"])
     {
         artists.push_back(Artist::serialize(artist));
-    };
-    album.id = data["id"];
-    album.release_date = data["release_date"];
-    album.total_tracks = data["tracks"]["total"];
+    }
+    album.artists = artists;
+
+    // Parse tracks
     std::vector<TrackMetadata> tracks;
     for (const auto &track : data["tracks"]["items"])
     {
-        tracks.push_back(TrackMetadata::serialize(track));
+        // Create a complete track object with album info
+        auto track_data = track;
+        track_data["album"] = {
+            {"name", album.name},
+            {"id", album.id}
+        };
+        tracks.push_back(TrackMetadata::serialize(track_data));
     }
+    album.tracks = tracks;
 
     return album;
 }
@@ -72,10 +84,11 @@ PlaylistMetadata PlaylistMetadata::serialize(const nlohmann::json &data)
     playlist.name = data["name"];
     playlist.id = data["id"];
     playlist.total_tracks = data["tracks"]["total"];
+    
     std::vector<TrackMetadata> tracks;
-    for (const auto &track : data["tracks"]["items"])
+    for (const auto &item : data["tracks"]["items"])
     {
-        tracks.push_back(TrackMetadata::serialize(track));
+        tracks.push_back(TrackMetadata::serialize(item["track"]));
     }
     playlist.tracks = tracks;
 

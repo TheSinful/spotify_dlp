@@ -155,3 +155,121 @@ TEST_F(SpotifyAPITest, SerializeTrackResponse)
 
     ASSERT_EQ(serialized, expected);
 }
+
+TEST_F(SpotifyAPITest, SerializeAlbumResponse)
+{
+    std::string test_response = R"({
+        "name": "test_name",
+        "id": "test_id", 
+        "total_tracks": 1,
+        "release_date": "1981-12",
+        "artists": [{
+            "external_urls": {"spotify": "test_url"},
+            "id": "test_artist_id",
+            "name": "test_artist_name",
+            "uri": "test_artist_uri"
+        }],
+        "tracks": {
+            "items": [{
+                "external_urls": {"spotify": "test_url"},
+                "id": "track_id",
+                "name": "track_name",
+                "track_number": 1,
+                "artists": [{
+                    "external_urls": {"spotify": "test_url"},
+                    "id": "test_artist_id", 
+                    "name": "test_artist_name",
+                    "uri": "test_artist_uri"
+                }],
+                "uri": "test_track_uri"
+            }]
+        }
+    })";
+
+    auto to_json = nlohmann::json::parse(test_response);
+    AlbumMetadata serialized = AlbumMetadata::serialize(to_json);
+
+    Artist manual_artist;
+    manual_artist.name = "test_artist_name";
+    manual_artist.id = "test_artist_id";
+    manual_artist.external_urls = {"test_url"};
+    manual_artist.uri = "test_artist_uri";
+
+    TrackMetadata track;
+    track.name = "track_name";
+    track.id = "track_id";
+    track.track_number = 1;
+    track.external_urls = {"test_url"}; 
+    track.artists = {manual_artist};
+    track.album_name = "test_name";  
+    track.album_id = "test_id";    
+
+    AlbumMetadata manual;
+    manual.name = "test_name";
+    manual.id = "test_id";
+    manual.artists = {manual_artist};
+    manual.release_date = "1981-12";
+    manual.total_tracks = 1;
+    manual.tracks = {track};
+
+    ASSERT_EQ(serialized, manual);
+}
+
+TEST_F(SpotifyAPITest, SerializePlaylistResponse)
+{
+    std::string test_response = R"({
+        "name": "test_playlist",
+        "id": "test_playlist_id",
+        "tracks": {
+            "total": 1,
+            "items": [{
+                "track": {
+                    "name": "test_track_name",
+                    "id": "test_track_id",
+                    "track_number": 1,
+                    "external_urls": {
+                        "spotify": "test_track_url"
+                    },
+                    "album": {
+                        "name": "test_album_name",
+                        "id": "test_album_id"
+                    },
+                    "artists": [{
+                        "external_urls": {
+                            "spotify": "test_artist_url"
+                        },
+                        "id": "test_artist_id",
+                        "name": "test_artist_name",
+                        "uri": "test_artist_uri"
+                    }]
+                }
+            }]
+        }
+    })";
+
+    auto to_json = nlohmann::json::parse(test_response);
+    PlaylistMetadata serialized = PlaylistMetadata::serialize(to_json);
+
+    Artist manual_artist;
+    manual_artist.name = "test_artist_name";
+    manual_artist.id = "test_artist_id";
+    manual_artist.external_urls = {"test_artist_url"};
+    manual_artist.uri = "test_artist_uri";
+
+    TrackMetadata track;
+    track.name = "test_track_name";
+    track.id = "test_track_id";
+    track.track_number = 1;
+    track.external_urls = {"test_track_url"};
+    track.artists = {manual_artist};
+    track.album_name = "test_album_name";
+    track.album_id = "test_album_id";
+
+    PlaylistMetadata expected;
+    expected.name = "test_playlist";
+    expected.id = "test_playlist_id";
+    expected.total_tracks = 1;
+    expected.tracks = {track};
+
+    ASSERT_EQ(serialized, expected);
+}
