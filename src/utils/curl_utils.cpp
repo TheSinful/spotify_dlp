@@ -39,4 +39,4 @@ void CurlGuard::set_headers(struct curl_slist *new_headers)
     headers = new_headers;
 }
 
-CURL *CurlGuard::get() { return curl; }
+CURL* CurlGuard::get() { return curl; }

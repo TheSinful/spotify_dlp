@@ -1,5 +1,7 @@
-#include <iostream> 
+#include <iostream>
+#include "./utils/logger.h"
 
-int main() { 
+int main()
+{
     return 0;
 }

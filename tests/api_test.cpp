@@ -58,7 +58,6 @@ protected:
         ValidateTrackMetadata(playlist.tracks[0]);
     }
 };
-
 TEST_F(SpotifyAPITest, ValidateAndCleanUrlRemovesQueryParameters)
 {
     SpotifyAPI api(this->client_id, this->client_secret);
@@ -66,7 +65,6 @@ TEST_F(SpotifyAPITest, ValidateAndCleanUrlRemovesQueryParameters)
     std::string cleaned = api.validate_and_clean_url(url);
     EXPECT_EQ(cleaned, "track/123456");
 }
-
 TEST_F(SpotifyAPITest, ValidateAndCleanUrlHandlesShortUrl)
 {
     SpotifyAPI api(this->client_id, this->client_secret);
@@ -74,14 +72,12 @@ TEST_F(SpotifyAPITest, ValidateAndCleanUrlHandlesShortUrl)
     std::string cleaned = api.validate_and_clean_url(url);
     EXPECT_EQ(cleaned, "track/123456");
 }
-
 TEST_F(SpotifyAPITest, ValidateAndCleanUrlThrowsOnSpotifyUri)
 {
     SpotifyAPI api(this->client_id, this->client_secret);
     std::string url = "spotify:track:123456";
     EXPECT_THROW(api.validate_and_clean_url(url), std::runtime_error);
 }
-
 TEST_F(SpotifyAPITest, SplitUrlParsesCorrectly)
 {
     SpotifyAPI api(this->client_id, this->client_secret);
@@ -89,7 +85,6 @@ TEST_F(SpotifyAPITest, SplitUrlParsesCorrectly)
     EXPECT_EQ(type, "track");
     EXPECT_EQ(id, "123456");
 }
-
 TEST_F(SpotifyAPITest, DetermineContentTypeReturnsCorrectType)
 {
     SpotifyAPI api(this->client_id, this->client_secret);
@@ -98,14 +93,12 @@ TEST_F(SpotifyAPITest, DetermineContentTypeReturnsCorrectType)
     EXPECT_EQ(api.determine_content_type("playlist"), DownloadType::Playlist);
     EXPECT_THROW(api.determine_content_type("invalid"), std::runtime_error);
 }
-
 TEST_F(SpotifyAPITest, ValidateFetchToken)
 {
     SpotifyAPI api(this->client_id, this->client_secret);
-    api.fetch_token();
+    api.fetch_oauth_token();
     EXPECT_FALSE(api.token.empty());
 }
-
 TEST_F(SpotifyAPITest, SerializeArtistResponse)
 {
     // grabbed from spotify docs (edited slightly to be 100% sure we read the right fields)
@@ -145,7 +138,6 @@ TEST_F(SpotifyAPITest, SerializeArtistResponse)
 
     ASSERT_EQ(serialized, manually_serialized);
 }
-
 TEST_F(SpotifyAPITest, SerializeTrackResponse)
 {
     std::string test_response = R"({
@@ -200,7 +192,6 @@ TEST_F(SpotifyAPITest, SerializeTrackResponse)
 
     ASSERT_EQ(serialized, expected);
 }
-
 TEST_F(SpotifyAPITest, SerializeAlbumResponse)
 {
     std::string test_response = R"({
@@ -259,7 +250,6 @@ TEST_F(SpotifyAPITest, SerializeAlbumResponse)
 
     ASSERT_EQ(serialized, manual);
 }
-
 TEST_F(SpotifyAPITest, SerializePlaylistResponse)
 {
     std::string test_response = R"({
@@ -318,7 +308,6 @@ TEST_F(SpotifyAPITest, SerializePlaylistResponse)
 
     ASSERT_EQ(serialized, expected);
 }
-
 TEST_F(SpotifyAPITest, FetchTrackMetadataReturnsCorrectData)
 {
     SpotifyAPI api(this->client_id, this->client_secret);
@@ -335,7 +324,6 @@ TEST_F(SpotifyAPITest, FetchAlbumMetadataReturnsCorrectData)
     AlbumMetadata result = api.fetch_album_metadata();
     ValidateAlbumMetadata(result);
 }
-
 TEST_F(SpotifyAPITest, FetchPlaylistMetadataReturnsCorrectData)
 {
     SpotifyAPI api(this->client_id, this->client_secret);
