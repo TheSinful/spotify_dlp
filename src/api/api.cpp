@@ -47,7 +47,7 @@ void SpotifyAPI::fetch_token()
     if (!curl)
     {
         std::string log = "Failed to initialize CURL";
-        THROW_WITH_LOG(CurlException, log, log);
+        THROW_AND_LOG(CurlException, log, log);
     }
 
     this->curl_guard.set_headers(headers);
@@ -67,7 +67,7 @@ void SpotifyAPI::fetch_token()
     {
         std::string base_msg = "Failed to send request to fetch authorization token for spotify.";
         std::string verbose_msg = base_msg + curl_easy_strerror(res) + " (" + std::to_string(res) + ")";
-        THROW_WITH_LOG(CurlException, base_msg, verbose_msg);
+        THROW_AND_LOG(CurlException, base_msg, verbose_msg);
     }
 
     std::string obtain_msg = "Successfully obtained spotify access token";
@@ -80,15 +80,15 @@ void SpotifyAPI::fetch_token()
         {
             std::string error = json_response["error"].get<std::string>();
             std::string base_log = "Spotify API Error.";
-            THROW_WITH_LOG(CurlException, base_log, base_log + error);
+            THROW_AND_LOG(CurlException, base_log, base_log + error);
         }
         this->token = json_response["access_token"].get<std::string>();
     }
     catch (const nlohmann::json::exception &e)
     {
-
-        std::string msg = "Failed to parse response from spotify auth token request.";
-        THROW_WITH_LOG(CurlException, msg, msg + std::string(e.what()));
+        std::string msg = "Failed to parse response when fetching Spotify oauth token."; 
+        std::string verbose_msg = msg + std::string(e.what());
+        THROW_AND_LOG(CurlException, msg, verbose_msg);
     }
 }
 
@@ -113,28 +113,28 @@ void SpotifyAPI::get_metadata(std::string url)
 
 TrackMetadata SpotifyAPI::fetch_track_metadata()
 {
-    nlohmann::json response = this->fetch_raw_metadata("/tracks");
+    nlohmann::json response = this->fetch_spotify_item_json("/tracks");
     return TrackMetadata::serialize(response);
 }
 
 AlbumMetadata SpotifyAPI::fetch_album_metadata()
 {
-    nlohmann::json response = this->fetch_raw_metadata("/albums");
+    nlohmann::json response = this->fetch_spotify_item_json("/albums");
 
     return AlbumMetadata::serialize(response);
 }
 
 PlaylistMetadata SpotifyAPI::fetch_playlist_metadata()
 {
-    nlohmann::json response = this->fetch_raw_metadata("/playlists");
+    nlohmann::json response = this->fetch_spotify_item_json("/playlists");
 
     return PlaylistMetadata::serialize(response);
 }
 
-nlohmann::json SpotifyAPI::fetch_raw_metadata(std::string endpoint)
+nlohmann::json SpotifyAPI::fetch_spotify_item_json(std::string endpoint)
 {
     std::string response;
-    std::string url = "https://api.spotify.com/v1" + endpoint + this->item_id;
+    std::string url = "https://api.spotify.com/v1" + endpoint + "/" + this->item_id;
 
     std::string auth_header = "Authorization: Bearer " + this->token;
     curl_slist *headers = curl_slist_append(nullptr, auth_header.c_str());
@@ -142,6 +142,7 @@ nlohmann::json SpotifyAPI::fetch_raw_metadata(std::string endpoint)
 
     CURL *curl = this->curl_guard.get();
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
@@ -149,13 +150,16 @@ nlohmann::json SpotifyAPI::fetch_raw_metadata(std::string endpoint)
     CURLcode res = curl_easy_perform(curl);
     if (res != CURLE_OK)
     {
-        throw std::runtime_error(curl_easy_strerror(res));
+        std::string base_log = "Failed to make request to request metadata from Spotify API!";
+        THROW_AND_LOG(std::runtime_error, base_log, base_log + curl_easy_strerror(res));
     }
 
     nlohmann::json json_response = nlohmann::json::parse(response);
     if (json_response.contains("error"))
     {
-        throw std::runtime_error(json_response["error"].get<std::string>());
+        std::string base_log = "Spotify API returned an error when attempting to request metadata!";
+        std::string response_err = json_response["error"].get<std::string>();
+        THROW_AND_LOG(std::runtime_error, base_log, base_log + response_err);
     }
 
     return json_response;
@@ -164,7 +168,7 @@ nlohmann::json SpotifyAPI::fetch_raw_metadata(std::string endpoint)
 void SpotifyAPI::parse_url()
 {
     std::string cleaned_url = validate_and_clean_url(this->spotify_url);
-    auto [type, id] = split_url(cleaned_url);
+    auto [type, id] = extract_type_and_id(cleaned_url);
 
     this->download_type = determine_content_type(type);
     this->item_id = id;
@@ -193,12 +197,13 @@ std::string SpotifyAPI::validate_and_clean_url(const std::string &url)
     return cleaned_url;
 }
 
-std::pair<std::string, std::string> SpotifyAPI::split_url(const std::string &url)
+std::pair<std::string, std::string> SpotifyAPI::extract_type_and_id(const std::string &url)
 {
     size_t slash_pos = url.find('/');
     if (slash_pos == std::string::npos)
     {
-        throw std::runtime_error("Invalid URL format");
+        std::string log = "Invalid URL format";
+        THROW_AND_LOG(std::runtime_error, log, log + "given when attempting to extract type and id off url" + url);
     }
 
     std::string type = url.substr(0, slash_pos);

@@ -56,7 +56,7 @@ protected:
 TEST_F(LogTest, TestThrowLog)
 {
     EXPECT_THROW(
-        THROW_WITH_LOG(std::runtime_error,
+        THROW_AND_LOG(std::runtime_error,
                        "Error occurred",
                        "Error occurred: detailed info - operation failed at step 3"),
         std::runtime_error);

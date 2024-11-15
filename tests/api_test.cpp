@@ -12,6 +12,51 @@ protected:
 
     std::string client_id;
     std::string client_secret;
+
+    void ValidateTrackMetadata(const TrackMetadata &track)
+    {
+        EXPECT_FALSE(track.name.empty());
+        EXPECT_FALSE(track.id.empty());
+        EXPECT_FALSE(track.artists.empty());
+        EXPECT_FALSE(track.external_urls.empty());
+        EXPECT_GT(track.track_number, 0);
+
+        // Validate album info
+        EXPECT_TRUE(track.album_name.has_value());
+        EXPECT_TRUE(track.album_id.has_value());
+        EXPECT_FALSE(track.album_name->empty());
+        EXPECT_FALSE(track.album_id->empty());
+
+        // Validate first artist
+        const auto &artist = track.artists[0];
+        EXPECT_FALSE(artist.name.empty());
+        EXPECT_FALSE(artist.id.empty());
+        EXPECT_FALSE(artist.external_urls.empty());
+    }
+
+    void ValidateAlbumMetadata(const AlbumMetadata &album)
+    {
+        EXPECT_FALSE(album.name.empty());
+        EXPECT_FALSE(album.id.empty());
+        EXPECT_FALSE(album.release_date.empty());
+        EXPECT_GT(album.total_tracks, 0);
+        EXPECT_FALSE(album.artists.empty());
+        EXPECT_FALSE(album.tracks.empty());
+
+        // Validate first track
+        ValidateTrackMetadata(album.tracks[0]);
+    }
+
+    void ValidatePlaylistMetadata(const PlaylistMetadata &playlist)
+    {
+        EXPECT_FALSE(playlist.name.empty());
+        EXPECT_FALSE(playlist.id.empty());
+        EXPECT_GT(playlist.total_tracks, 0);
+        EXPECT_FALSE(playlist.tracks.empty());
+
+        // Validate first track
+        ValidateTrackMetadata(playlist.tracks[0]);
+    }
 };
 
 TEST_F(SpotifyAPITest, ValidateAndCleanUrlRemovesQueryParameters)
@@ -40,7 +85,7 @@ TEST_F(SpotifyAPITest, ValidateAndCleanUrlThrowsOnSpotifyUri)
 TEST_F(SpotifyAPITest, SplitUrlParsesCorrectly)
 {
     SpotifyAPI api(this->client_id, this->client_secret);
-    auto [type, id] = api.split_url("track/123456");
+    auto [type, id] = api.extract_type_and_id("track/123456");
     EXPECT_EQ(type, "track");
     EXPECT_EQ(id, "123456");
 }
@@ -199,10 +244,10 @@ TEST_F(SpotifyAPITest, SerializeAlbumResponse)
     track.name = "track_name";
     track.id = "track_id";
     track.track_number = 1;
-    track.external_urls = {"test_url"}; 
+    track.external_urls = {"test_url"};
     track.artists = {manual_artist};
-    track.album_name = "test_name";  
-    track.album_id = "test_id";    
+    track.album_name = "test_name";
+    track.album_id = "test_id";
 
     AlbumMetadata manual;
     manual.name = "test_name";
@@ -272,4 +317,30 @@ TEST_F(SpotifyAPITest, SerializePlaylistResponse)
     expected.tracks = {track};
 
     ASSERT_EQ(serialized, expected);
+}
+
+TEST_F(SpotifyAPITest, FetchTrackMetadataReturnsCorrectData)
+{
+    SpotifyAPI api(this->client_id, this->client_secret);
+    api.item_id = "5DQiTQrSoYOZxm5oj3lR4l";
+
+    TrackMetadata result = api.fetch_track_metadata();
+    ValidateTrackMetadata(result);
+}
+TEST_F(SpotifyAPITest, FetchAlbumMetadataReturnsCorrectData)
+{
+    SpotifyAPI api(this->client_id, this->client_secret);
+    api.item_id = "55S2SOsWCYekWJtJ8LwVqV";
+
+    AlbumMetadata result = api.fetch_album_metadata();
+    ValidateAlbumMetadata(result);
+}
+
+TEST_F(SpotifyAPITest, FetchPlaylistMetadataReturnsCorrectData)
+{
+    SpotifyAPI api(this->client_id, this->client_secret);
+    api.item_id = "7464s7OIoUO0k23f1uxzLL";
+
+    PlaylistMetadata result = api.fetch_playlist_metadata();
+    ValidatePlaylistMetadata(result);
 }

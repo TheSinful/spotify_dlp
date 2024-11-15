@@ -11,6 +11,7 @@ target_link_libraries(${PROJECT_NAME}_test PRIVATE
     nlohmann_json::nlohmann_json
     GTest::gtest_main
     spdlog::spdlog 
+    fmt::fmt 
 )
 
 target_include_directories(${PROJECT_NAME}_test PRIVATE

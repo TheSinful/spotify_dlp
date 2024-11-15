@@ -40,6 +40,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(spdlog)
 
+# Fetch fmt library
+FetchContent_Declare(
+    fmt
+    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+    GIT_TAG 11.0.2 
+)
+FetchContent_MakeAvailable(fmt)
+
 # Add source files
 add_executable(${PROJECT_NAME} 
     src/main.cpp 
@@ -50,11 +58,13 @@ add_executable(${PROJECT_NAME}
 
 set(BUILD_SHARED_LIBS OFF)
 
+
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     CURL::libcurl 
     nlohmann_json::nlohmann_json
     GTest::gtest_main
     spdlog::spdlog
+    fmt::fmt
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
