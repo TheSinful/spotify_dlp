@@ -6,7 +6,7 @@
 #include <variant>
 #include <nlohmann/json.hpp>
 #include <gtest/gtest.h>
-#include "../utils/curl_utils.h"
+#include "../../utils/curl_utils.h"
 #include "metadata.h"
 
 class SpotifyAPITest;

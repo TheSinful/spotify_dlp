@@ -2,9 +2,10 @@
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include <stdexcept>
-#include "api.h"
-#include "../utils/curl_utils.h"
-#include "../utils/logger.h"
+
+#include "./api.h"
+#include "../../utils/curl_utils.h"
+#include "../../utils/logger.h"
 
 using namespace std;
 using namespace nlohmann;

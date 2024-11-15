@@ -51,8 +51,8 @@ FetchContent_MakeAvailable(fmt)
 # Add source files
 add_executable(${PROJECT_NAME} 
     src/main.cpp 
-    src/api/api.cpp 
-    src/api/metadata.cpp
+    src/dlp/spotify/api.cpp 
+    src/dlp/spotify/metadata.cpp
     src/utils/curl_utils.cpp
 )
 

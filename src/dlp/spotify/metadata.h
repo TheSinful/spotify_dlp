@@ -57,6 +57,8 @@ struct TrackMetadata
     std::optional<std::string> album_id;
     std::vector<std::string> external_urls;
     int track_number;
+
+    //TODO: Add duration_ms and available market for better search engine results from youtube.
 };
 
 struct AlbumMetadata

@@ -1,8 +1,8 @@
 add_executable(${PROJECT_NAME}_test
     api_test.cpp     
     log_test.cpp 
-    ${CMAKE_SOURCE_DIR}/src/api/api.cpp
-    ${CMAKE_SOURCE_DIR}/src/api/metadata.cpp
+    ${CMAKE_SOURCE_DIR}/src/dlp/spotify/api.cpp
+    ${CMAKE_SOURCE_DIR}/src/dlp/spotify/metadata.cpp
     ${CMAKE_SOURCE_DIR}/src/utils/curl_utils.cpp
 )
 

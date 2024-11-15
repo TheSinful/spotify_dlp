@@ -2,8 +2,8 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/base_sink.h>
 #include <spdlog/details/null_mutex.h>
-#include "../src/utils/logger.h"
 #include <stdexcept>
+#include "../src/utils/logger.h"
 
 // custom sink to capture log messages
 template <typename Mutex>
@@ -57,8 +57,8 @@ TEST_F(LogTest, TestThrowLog)
 {
     EXPECT_THROW(
         THROW_AND_LOG(std::runtime_error,
-                       "Error occurred",
-                       "Error occurred: detailed info - operation failed at step 3"),
+                      "Error occurred",
+                      "Error occurred: detailed info - operation failed at step 3"),
         std::runtime_error);
 }
 
