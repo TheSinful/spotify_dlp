@@ -1,0 +1,1 @@
+This directory will be the for the C API that will be used for all bindings
