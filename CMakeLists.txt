@@ -48,6 +48,16 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fmt)
 
+if(WIN32)
+    add_compile_definitions(PLATFORM_WINDOWS)
+    set(PLATFORM_BINARY_SOURCE "./src/dlp/youtube/data/yt-dlp-data-windows.cpp")
+else()
+    add_compile_definitions(PLATFORM_LINUX)
+    set(PLATFORM_BINARY_SOURCE "./src/dlp/youtube/data/yt-dlp-data-linux.cpp")
+endif()
+
+add_library(yt-dlp-data ${PLATFORM_BINARY_SOURCE})
+
 # Add source files
 add_executable(${PROJECT_NAME} 
     src/main.cpp 
