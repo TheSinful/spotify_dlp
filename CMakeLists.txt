@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.15)
 project(spotify_dlp)
+option(BUILD_TESTS "Build tests" OFF) 
 
-include(CTest)
-enable_testing()
+if(BUILD_TESTS) 
+    include(CTest)
+    enable_testing()
+endif()
 
 include(FetchContent)
 
@@ -23,16 +26,17 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(json)
 
-# Add Google Test
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.12.1
-)
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
 
-# Add spdlog 
+if(BUILD_TESTS) 
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG release-1.12.1
+    )
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+endif()
+
 FetchContent_Declare(
     spdlog
     GIT_REPOSITORY https://github.com/gabime/spdlog.git
@@ -40,7 +44,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(spdlog)
 
-# Fetch fmt library
 FetchContent_Declare(
     fmt
     GIT_REPOSITORY https://github.com/fmtlib/fmt.git
@@ -72,7 +75,6 @@ set(BUILD_SHARED_LIBS OFF)
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     CURL::libcurl 
     nlohmann_json::nlohmann_json
-    GTest::gtest_main
     spdlog::spdlog
     fmt::fmt
 )
@@ -82,5 +84,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 
-# Add tests
-add_subdirectory(tests)
+if(BUILD_TESTS) 
+    add_subdirectory(tests)
+    add_compile_definitions(BUILD_TEST)
+endif()

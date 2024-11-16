@@ -1,5 +1,5 @@
 #include "metadata.h"
-#include "../utils/logger.h"
+#include "../../utils/logger.h"
 
 Artist Artist::serialize(const nlohmann::json &data)
 {

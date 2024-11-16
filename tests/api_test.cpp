@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/spotify/api.h"
+#include "../src/dlp/spotify/api.h"
 
 class SpotifyAPITest : public ::testing::Test
 {
