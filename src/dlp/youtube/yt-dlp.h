@@ -1,3 +1,22 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:2f9bd9a032b5e82927ed058f9834b24ba7ec51b256c155d2f8a3ec10d6dc5e26
-size 367
+#pragma once
+#ifndef YT_DLP_H
+#define YT_DLP_H
+
+#include <filesystem> 
+
+class YtDLP { 
+public: 
+    YtDLP();
+    
+    std::string get_path() const; 
+
+private: 
+    void extract_yt_dlp_windows(); 
+    void extract_yt_dlp_linux(); 
+    void get_temp_path(); 
+
+    std::filesystem::path yt_dlp_temp_path; 
+    std::string program_name; 
+}; 
+
+#endif 
