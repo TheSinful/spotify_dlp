@@ -113,16 +113,13 @@ TEST_F(LogTest, DebugLogging_WhenDebugDisabledButVerboseEnabled_LogsNothing)
 
 TEST_F(LogTest, DebugLogging_StateTransition_PreservesLastMessage)
 {
-    // Setup initial state
     LoggerUtils::setDebug(true);
     LoggerUtils::setVerbose(true);
     LOG_DEBUG("Debug message", "Verbose debug message");
     std::string lastMessage = getLastLogMessage();
 
-    // Transition state
     LoggerUtils::setDebug(false);
     LOG_DEBUG("New debug message", "New verbose message");
 
-    // Should preserve previous message
     EXPECT_EQ(getLastLogMessage(), lastMessage);
 }

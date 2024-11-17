@@ -8,7 +8,6 @@
 // Callback function for CURL write operations
 size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
 
-// Exception indicating an issue with a CURL request
 class CurlException : public std::exception
 {
     std::string msg;
@@ -26,14 +25,14 @@ public:
     CurlGuard();
     ~CurlGuard();
 
-    CurlGuard(const CurlGuard&) = delete;
-    CurlGuard& operator=(const CurlGuard&) = delete;
-    CurlGuard(CurlGuard&&) = delete;
-    CurlGuard& operator=(CurlGuard&&) = delete;
+    CurlGuard(const CurlGuard &) = delete;
+    CurlGuard &operator=(const CurlGuard &) = delete;
+    CurlGuard(CurlGuard &&) = delete;
+    CurlGuard &operator=(CurlGuard &&) = delete;
 
-    void set_headers(struct curl_slist *new_headers); 
+    void set_headers(struct curl_slist *new_headers);
 
-    CURL *get(); 
+    CURL *get();
 
 private:
     CURL *curl = nullptr;

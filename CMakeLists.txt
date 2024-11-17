@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(spotify_dlp)
 
-include(FetchContent)  # Move this to the top, before any FetchContent_Declare calls
+include(FetchContent) 
 
 option(BUILD_TESTS "Build tests" OFF) 
 
@@ -18,7 +18,6 @@ if(BUILD_TESTS)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(googletest)
     
-    # Add this line to make GTest headers available globally
     include_directories(${gtest_SOURCE_DIR}/include)
 endif()
 
