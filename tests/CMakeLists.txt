@@ -1,22 +1,20 @@
 add_executable(${PROJECT_NAME}_test
     api_test.cpp     
+    yt_dlp_test.cpp 
     log_test.cpp 
-    ${CMAKE_SOURCE_DIR}/src/dlp/spotify/api.cpp
-    ${CMAKE_SOURCE_DIR}/src/dlp/spotify/metadata.cpp
-    ${CMAKE_SOURCE_DIR}/src/utils/curl_utils.cpp
 )
 
+target_compile_definitions(${PROJECT_NAME}_test PRIVATE BUILD_TEST)
+
 target_link_libraries(${PROJECT_NAME}_test PRIVATE
-    CURL::libcurl
-    nlohmann_json::nlohmann_json
+    ${PROJECT_NAME}_lib
     GTest::gtest_main
-    spdlog::spdlog 
-    fmt::fmt 
 )
 
 target_include_directories(${PROJECT_NAME}_test PRIVATE
     ${CURL_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/include
+    ${gtest_SOURCE_DIR}/include
 )
 
 include(GoogleTest)

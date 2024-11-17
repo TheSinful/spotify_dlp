@@ -1,15 +1,15 @@
 #ifdef _WIN32
-    #include <windows.h>
+#include <windows.h>
 #else
-    #include <unistd.h>
-    #include <sys/stat.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #endif
 
 #include <fstream>
 #include <filesystem>
 #include "yt-dlp.h"
-#include "yt-dlp-data.h"
-#include "../utils/logger.h"
+#include "./data/yt-dlp-data.h"
+#include "../../utils/logger.h"
 
 YtDLP::YtDLP()
 {
@@ -24,6 +24,7 @@ YtDLP::YtDLP()
 
 void YtDLP::extract_yt_dlp_linux()
 {
+#ifdef __linux__
     std::ofstream outfile(this->yt_dlp_temp_path, std::ios::binary);
     if (!outfile)
     {
@@ -32,7 +33,7 @@ void YtDLP::extract_yt_dlp_linux()
     }
 
     outfile.write(reinterpret_cast<const char *>(YtDLPData::yt_dlp_linux), YtDLPData::yt_dlp_linux_size);
-    outfile.close();
+#endif
 }
 
 void YtDLP::extract_yt_dlp_windows()

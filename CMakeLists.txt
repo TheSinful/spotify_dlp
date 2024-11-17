@@ -1,13 +1,26 @@
 cmake_minimum_required(VERSION 3.15)
 project(spotify_dlp)
+
+include(FetchContent)  # Move this to the top, before any FetchContent_Declare calls
+
 option(BUILD_TESTS "Build tests" OFF) 
 
 if(BUILD_TESTS) 
     include(CTest)
     enable_testing()
+    add_compile_definitions(BUILD_TEST)
+    
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG release-1.12.1
+    )
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+    
+    # Add this line to make GTest headers available globally
+    include_directories(${gtest_SOURCE_DIR}/include)
 endif()
-
-include(FetchContent)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,7 +29,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Find CURL
 find_package(CURL REQUIRED)
 set(CURL_USE_STATIC_LIBS ON)
-set(CMAKE_EXE_LINKER_FLAGS "-static")
 
 # Add nlohmann/json
 FetchContent_Declare(
@@ -25,17 +37,6 @@ FetchContent_Declare(
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(json)
-
-
-if(BUILD_TESTS) 
-    FetchContent_Declare(
-        googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG release-1.12.1
-    )
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(googletest)
-endif()
 
 FetchContent_Declare(
     spdlog
@@ -53,13 +54,40 @@ FetchContent_MakeAvailable(fmt)
 
 if(WIN32)
     add_compile_definitions(PLATFORM_WINDOWS)
-    set(PLATFORM_BINARY_SOURCE "./src/dlp/youtube/data/yt-dlp-data-windows.cpp")
+    set(PLATFORM_BINARY_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/src/dlp/youtube/data/yt-dlp-data-windows.cpp")
 else()
     add_compile_definitions(PLATFORM_LINUX)
-    set(PLATFORM_BINARY_SOURCE "./src/dlp/youtube/data/yt-dlp-data-linux.cpp")
+    set(PLATFORM_BINARY_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/src/dlp/youtube/data/yt-dlp-data-linux.cpp")
 endif()
 
-add_library(yt-dlp-data ${PLATFORM_BINARY_SOURCE})
+add_library(yt-dlp-data STATIC ${PLATFORM_BINARY_SOURCE})
+
+target_link_libraries(yt-dlp-data PRIVATE 
+    CURL::libcurl 
+    nlohmann_json::nlohmann_json
+)
+
+add_library(${PROJECT_NAME}_lib
+    src/dlp/spotify/api.cpp
+    src/dlp/spotify/metadata.cpp
+    src/utils/curl_utils.cpp
+    src/dlp/youtube/yt-dlp.cpp
+)
+
+target_compile_definitions(${PROJECT_NAME}_lib PUBLIC BUILD_TEST)
+target_include_directories(${PROJECT_NAME}_lib PUBLIC 
+    ${CMAKE_SOURCE_DIR}/include
+    ${CURL_INCLUDE_DIRS}
+    $<$<BOOL:${BUILD_TESTS}>:${gtest_SOURCE_DIR}/include>
+)
+
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC
+    CURL::libcurl
+    nlohmann_json::nlohmann_json
+    spdlog::spdlog
+    fmt::fmt
+    yt-dlp-data
+)
 
 # Add source files
 add_executable(${PROJECT_NAME} 
@@ -69,14 +97,20 @@ add_executable(${PROJECT_NAME}
     src/utils/curl_utils.cpp
 )
 
-set(BUILD_SHARED_LIBS OFF)
+if(MSVC)
+    target_compile_options(yt-dlp-data PRIVATE "/MP1" "/bigobj")
+else()
+    target_compile_options(yt-dlp-data PRIVATE "-Wa,-mbig-obj")
+endif()
 
+set(BUILD_SHARED_LIBS OFF)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     CURL::libcurl 
     nlohmann_json::nlohmann_json
     spdlog::spdlog
     fmt::fmt
+    yt-dlp-data
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
@@ -86,5 +120,4 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 if(BUILD_TESTS) 
     add_subdirectory(tests)
-    add_compile_definitions(BUILD_TEST)
 endif()

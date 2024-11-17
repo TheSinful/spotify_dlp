@@ -8,7 +8,7 @@
 #include "../../utils/curl_utils.h"
 #include "metadata.h"
 
-#ifdef BUILD_TESTS
+#ifdef BUILD_TEST
     #include <gtest/gtest.h>
 #endif
 
@@ -42,7 +42,7 @@ private:
 
     CurlGuard curl_guard;
 
-#ifdef BUILD_TESTS
+#ifdef BUILD_TEST
     friend class SpotifyAPITest;
 
     FRIEND_TEST(SpotifyAPITest, ValidateAndCleanUrlRemovesQueryParameters);
