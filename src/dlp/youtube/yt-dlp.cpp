@@ -11,13 +11,13 @@
 #include "./data/yt-dlp-data.h"
 #include "../../utils/logger.h"
 
-YtDLP::YtDLP()
+YtDLP::YtDLP() : program_name(_WIN32 ? "yt_dlp.exe" : "yt_dlp")
 {
+    get_temp_path();
+    
 #ifdef _WIN32
-    this->program_name = "yt_dlp.exe";
     this->extract_yt_dlp_windows();
 #else
-    this->program_name = "yt_dlp";
     this->extract_yt_dlp_linux();
 #endif
 }
@@ -56,7 +56,7 @@ void YtDLP::get_temp_path()
     GetTempPathW(MAX_PATH, temp_dir);
     this->yt_dlp_temp_path = std::filesystem::path(temp_dir) / this->program_name;
 #else
-    std::string temp_path = "/tmp" + this->program_name;
+    std::string temp_path = "/tmp/" + this->program_name;  // Added missing slash
     this->yt_dlp_temp_path = std::filesystem::path(temp_path);
 #endif
 }
