@@ -29,7 +29,7 @@ struct Artist
     std::string name;
     std::string uri;
 
-    static Artist serialize(const nlohmann::json &data); // declaration only
+    static Artist serialize(const nlohmann::json &data);
 };
 
 struct TrackMetadata
@@ -57,8 +57,6 @@ struct TrackMetadata
     std::optional<std::string> album_id;
     std::vector<std::string> external_urls;
     int track_number;
-
-    //TODO: Add duration_ms and available market for better search engine results from youtube.
 };
 
 struct AlbumMetadata
@@ -104,7 +102,7 @@ struct PlaylistMetadata
                id == other.id &&
                name == other.name &&
                tracks == other.tracks;
-    }; 
+    };
 };
 
 #endif
