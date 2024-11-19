@@ -70,7 +70,7 @@ protected:
         }
         else if constexpr (std::is_same_v<MetadataType, PlaylistMetadata>)
         {
-            // playlists are not validated here, we will just iterate thru each song which is done in the youtube class instead of here. 
+            // playlists are not validated here, we will just iterate thru each song which is done in the youtube class instead of here.
         }
 
         return is_valid_url(url);
@@ -108,22 +108,19 @@ TEST_F(YoutubeSearchBuilderTest, TestJoinArtistsValid)
         .external_urls = {"https://open.spotify.com/artist/1"},
         .id = "1",
         .name = "Artist1",
-        .uri = "spotify:artist:1"
-    };
-    
+        .uri = "spotify:artist:1"};
+
     Artist artist2{
         .external_urls = {"https://open.spotify.com/artist/2"},
         .id = "2",
         .name = "Artist2",
-        .uri = "spotify:artist:2"
-    };
-    
+        .uri = "spotify:artist:2"};
+
     Artist artist3{
         .external_urls = {"https://open.spotify.com/artist/3"},
         .id = "3",
         .name = "Artist3",
-        .uri = "spotify:artist:3"
-    };
+        .uri = "spotify:artist:3"};
 
     std::vector<Artist> empty_artists;
     ASSERT_EQ(url_builder.join_artists(empty_artists), "");

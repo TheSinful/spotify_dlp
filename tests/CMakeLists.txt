@@ -1,8 +1,8 @@
 add_executable(${PROJECT_NAME}_test
-    api_test.cpp     
-    yt_dlp_test.cpp 
-    log_test.cpp 
-    youtube_search_builder_test.cpp
+    dlp/spotify/api_test.cpp     
+    dlp/youtube/yt_dlp_test.cpp 
+    dlp/youtube/youtube_search_builder_test.cpp
+    utils/log_test.cpp 
 )
 
 target_compile_definitions(${PROJECT_NAME}_test PRIVATE BUILD_TEST)
