@@ -9,16 +9,16 @@
 #include "metadata.h"
 
 #ifdef BUILD_TEST
-    #include <gtest/gtest.h>
+#include <gtest/gtest.h>
 #endif
 
-class SpotifyAPITest;
+using AnyMetadata = std::variant<TrackMetadata, AlbumMetadata, PlaylistMetadata>;
 
 class SpotifyAPI
 {
 public:
     SpotifyAPI(std::string client_id, std::string client_secret);
-    void get_metadata(std::string url);
+    AnyMetadata get_metadata(std::string url);
 
 private:
     std::string validate_and_clean_url(const std::string &url);                      // tested
@@ -37,7 +37,6 @@ private:
     std::string client_id;
     std::string client_secret;
     std::string item_id;
-    std::variant<TrackMetadata, AlbumMetadata, PlaylistMetadata> metadata;
     DownloadType download_type;
 
     CurlGuard curl_guard;
@@ -54,7 +53,7 @@ private:
     FRIEND_TEST(SpotifyAPITest, FetchTrackMetadataReturnsCorrectData);
     FRIEND_TEST(SpotifyAPITest, FetchAlbumMetadataReturnsCorrectData);
     FRIEND_TEST(SpotifyAPITest, FetchPlaylistMetadataReturnsCorrectData);
-#endif 
+#endif
 };
 
 #endif

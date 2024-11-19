@@ -96,7 +96,7 @@ void SpotifyAPI::fetch_oauth_token()
     }
 }
 
-void SpotifyAPI::get_metadata(string url)
+AnyMetadata SpotifyAPI::get_metadata(string url)
 {
     this->spotify_url = url;
     this->parse_url();
@@ -104,14 +104,11 @@ void SpotifyAPI::get_metadata(string url)
     switch (download_type)
     {
     case DownloadType::Track:
-        this->metadata = this->fetch_track_metadata();
-        break;
+        return this->fetch_track_metadata();
     case DownloadType::Album:
-        this->metadata = this->fetch_album_metadata();
-        break;
+        return this->fetch_album_metadata();
     case DownloadType::Playlist:
-        this->metadata = this->fetch_playlist_metadata();
-        break;
+        return this->fetch_playlist_metadata();
     }
 }
 
