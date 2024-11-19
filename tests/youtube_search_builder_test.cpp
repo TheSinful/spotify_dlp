@@ -70,7 +70,7 @@ protected:
         }
         else if constexpr (std::is_same_v<MetadataType, PlaylistMetadata>)
         {
-            // url = url_builder.create_playlist_search_url(std::get<MetadataType>(data));
+            // playlists are not validated here, we will just iterate thru each song which is done in the youtube class instead of here. 
         }
 
         return is_valid_url(url);
