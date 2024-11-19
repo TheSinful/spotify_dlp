@@ -71,6 +71,7 @@ add_library(${PROJECT_NAME}_lib
     src/dlp/spotify/metadata.cpp
     src/utils/curl_utils.cpp
     src/dlp/youtube/yt-dlp.cpp
+    src/dlp/youtube/search_builder.cpp
 )
 
 target_compile_definitions(${PROJECT_NAME}_lib PUBLIC BUILD_TEST)
@@ -94,6 +95,9 @@ add_executable(${PROJECT_NAME}
     src/dlp/spotify/api.cpp 
     src/dlp/spotify/metadata.cpp
     src/utils/curl_utils.cpp
+    src/dlp/youtube/youtube.cpp 
+    src/dlp/youtube/yt-dlp.cpp 
+    src/dlp/youtube/search_builder.cpp 
 )
 
 if(MSVC)

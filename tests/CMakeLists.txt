@@ -2,6 +2,7 @@ add_executable(${PROJECT_NAME}_test
     api_test.cpp     
     yt_dlp_test.cpp 
     log_test.cpp 
+    youtube_search_builder_test.cpp
 )
 
 target_compile_definitions(${PROJECT_NAME}_test PRIVATE BUILD_TEST)
@@ -9,6 +10,7 @@ target_compile_definitions(${PROJECT_NAME}_test PRIVATE BUILD_TEST)
 target_link_libraries(${PROJECT_NAME}_test PRIVATE
     ${PROJECT_NAME}_lib
     GTest::gtest_main
+    CURL::libcurl 
 )
 
 target_include_directories(${PROJECT_NAME}_test PRIVATE
