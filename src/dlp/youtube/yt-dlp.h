@@ -11,7 +11,6 @@
 class YtDLP
 {
 #ifdef BUILD_TEST
-    friend class YtDLPTest;
     FRIEND_TEST(YtDLPTest_TestWindowsExtraction_Test, TestWindowsExtraction);
 #endif
 
