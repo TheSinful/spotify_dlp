@@ -18,6 +18,16 @@ protected:
     {
     }
 
+    DownloadConfig create_test_config()
+    {
+        DownloadConfig config;
+        config.audio_quality = 5;
+        config.download_file_type = DownloadFileType::MP3;
+        config.minimum_match_score = 0.6;
+
+        return config;
+    }
+
     SearchResult create_test_result(const std::string &title,
                                     const std::string &artist,
                                     const std::string &id = "test_id",
@@ -70,7 +80,9 @@ protected:
 TEST_F(YoutubeTest, CalculateMatchScoreTrackTest)
 {
     TrackMetadata track = create_test_track();
-    Youtube yt(track, api_key);
+    DownloadConfig config = create_test_config();
+    Youtube yt(api_key, config);
+    yt.metadata = track;
 
     // Perfect match
     auto perfect_result = create_test_result("Test Track", "Test Artist");
@@ -89,7 +101,9 @@ TEST_F(YoutubeTest, CalculateMatchScoreTrackTest)
 TEST_F(YoutubeTest, CalculateMatchScoreAlbumTest)
 {
     AlbumMetadata album = create_test_album();
-    Youtube yt(album, api_key);
+    DownloadConfig config = create_test_config();
+    Youtube yt(api_key, config);
+    yt.metadata = album;
 
     // Perfect album match
     auto perfect_result = create_test_result("Test Album", "Test Artist");
@@ -107,7 +121,9 @@ TEST_F(YoutubeTest, CalculateMatchScoreAlbumTest)
 
 TEST_F(YoutubeTest, CalculateTitleSimilarityTest)
 {
-    Youtube yt(create_test_track(), api_key);
+    DownloadConfig config = create_test_config();
+
+    Youtube yt(api_key, config);
 
     EXPECT_NEAR(yt.calculate_title_similarity("test", "test"), 1.0, 0.01);
     EXPECT_NEAR(yt.calculate_title_similarity("test", "test1"), 0.8, 0.1);
@@ -117,7 +133,9 @@ TEST_F(YoutubeTest, CalculateTitleSimilarityTest)
 
 TEST_F(YoutubeTest, NormalizeStringTest)
 {
-    Youtube yt(create_test_track(), api_key);
+    DownloadConfig config = create_test_config();
+
+    Youtube yt(api_key, config);
 
     EXPECT_EQ(yt.normalize_string("Test String!"), "test string");
     EXPECT_EQ(yt.normalize_string("  Spaces  "), "spaces");
@@ -127,7 +145,9 @@ TEST_F(YoutubeTest, NormalizeStringTest)
 
 TEST_F(YoutubeTest, ParseResponseTest)
 {
-    Youtube yt(create_test_track(), api_key);
+    DownloadConfig config = create_test_config();
+
+    Youtube yt(api_key, config);
 
     std::string test_response = R"({
         "items": [
