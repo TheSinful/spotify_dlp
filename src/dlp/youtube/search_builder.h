@@ -1,6 +1,6 @@
 #pragma once
 #ifndef SEARCH_BUILDER_H
-#define SEARCH_BUILDER_H
+#define SEARCH_BUILDER_H1
 
 #include <string>
 #include <regex>
@@ -10,25 +10,21 @@
 #include <gtest/gtest.h>
 #endif
 
-using URL = std::string;
+using Query = std::string;
 
-class YoutubeSearchBuilder
+class YoutubeMusicSearchQueryBuilder
 {
 #ifdef BUILD_TEST
-    friend class YoutubeSearchBuilderTest; 
+    friend class YoutubeSearchQueryBuilderTest;
 
-    FRIEND_TEST(YoutubeSearchBuilderTest, CreateTrackSearchURLTest);
-    FRIEND_TEST(YoutubeSearchBuilderTest, CreateAlbumSearchURLTest);
-    FRIEND_TEST(YoutubeSearchBuilderTest, TestUrlEncodeValid); 
-    FRIEND_TEST(YoutubeSearchBuilderTest, TestJoinArtistsValid);
+    FRIEND_TEST(YoutubeSearchQueryBuilderTest, CreateTrackSearchQueryTest);
+    FRIEND_TEST(YoutubeSearchQueryBuilderTest, CreateAlbumSearchQueryTest);
+    FRIEND_TEST(YoutubeSearchQueryBuilderTest, TestJoinArtistsValid);
 #endif
 
-protected:
-    URL create_track_search_url(const TrackMetadata &track);
-    URL create_album_search_url(const AlbumMetadata &album);
-private:
-    URL url_encode(const std::string &input);
-    std::string sanitize_query(const std::string &input);
+public:
+    Query create_track_search_query(const TrackMetadata &track);
+    Query create_album_search_query(const AlbumMetadata &album);
     std::string join_artists(const std::vector<Artist> &artists);
 };
 

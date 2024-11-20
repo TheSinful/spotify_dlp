@@ -2,6 +2,7 @@ add_executable(${PROJECT_NAME}_test
     dlp/spotify/api_test.cpp     
     dlp/youtube/yt_dlp_test.cpp 
     dlp/youtube/youtube_search_builder_test.cpp
+    dlp/youtube/youtube_test.cpp
     utils/log_test.cpp 
 )
 
