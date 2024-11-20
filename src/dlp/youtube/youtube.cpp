@@ -1,9 +1,13 @@
+#include <stdexcept>
 #include "youtube.h"
 #include "../../utils/curl_utils.h"
+#include "../../utils/logger.h"
 
 Youtube::Youtube(AnyMetadata metadata, std::string yt_api_key)
     : metadata(metadata), url_builder(), queries(), api_key(yt_api_key)
 {
+    LOG_INFO("Creating youtube search query.", "Creating youtube search query");
+    if (this->is_track())
     if (this->is_track())
     {
         TrackMetadata track = std::get<TrackMetadata>(this->metadata);
@@ -45,6 +49,7 @@ bool Youtube::is_playlist()
 
 std::string Youtube::make_search_request(const std::string &query)
 {
+    LOG_INFO("Making search request", "Making search request for query" + query);
     std::string response;
 
     CurlGuard curl;
@@ -53,6 +58,8 @@ std::string Youtube::make_search_request(const std::string &query)
     headers = curl_slist_append(headers, "Accept: application/json");
     headers = curl_slist_append(headers, "Content-Type: application/json");
     curl.set_headers(headers);
+    std::string header_log = "Created search request headers";
+    LOG_INFO(header_log, header_log);
 
     std::string url = "https://youtube.googleapis.com/youtube/v3/search"
                       "?part=snippet"
@@ -66,11 +73,13 @@ std::string Youtube::make_search_request(const std::string &query)
     curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &response);
+    std::string body_log = "Created search request body, making request!";
+    LOG_INFO(body_log, body_log);
 
     CURLcode res = curl_easy_perform(curl.get());
     if (res != CURLE_OK)
     {
-        throw CurlException(res);
+        THROW_AND_LOG(CurlException, "Response returned not ok", "Response from Youtube API returned not ok" + res);
     }
 
     return response;
@@ -91,7 +100,7 @@ std::vector<SearchResult> Youtube::parse_response(const std::string &response)
 
     if (!json.contains("items"))
     {
-        return results;
+        THROW_AND_LOG(std::runtime_error, "Failed to find items in response", "Failed to find items in response from Youtube API ");
     }
 
     for (const auto &item : json["items"])
@@ -171,7 +180,7 @@ double Youtube::calculate_match_score(const SearchResult &result)
 
         return score;
     }
-    
+
     return 0.0; // Playlists are handled as individual tracks
 }
 

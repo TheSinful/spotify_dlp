@@ -9,8 +9,8 @@
 ## 1. YouTube Integration
 - [x] **URL Generation & Video Discovery**
   - [x] Implement robust YouTube search URL builder
-  - [] Add search result parsing and validation  # Parse YouTube search results to extract video details (title, duration, views, channel) and validate against Spotify metadata
-  - [ ] Score/rank search results for best match  # Implement scoring algorithm based on title similarity, duration match, view count, and channel verification status
+  - [x] Add search result parsing and validation  # Parse YouTube search results to extract video details (title, duration, views, channel) and validate against Spotify metadata
+  - [x] Score/rank search results for best match  # Implement scoring algorithm based on title similarity, duration match, view count, and channel verification status
   - [ ] Handle rate limiting and errors  # Implement exponential backoff for YouTube API limits and handle network/API errors gracefully
 
 - [x] **YT-DLP Integration**
