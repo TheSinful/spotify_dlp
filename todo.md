@@ -15,16 +15,15 @@
 
 - [x] **YT-DLP Integration**
   - [x] Extract yt-dlp binary to temp directory
-  - [ ] Implement process management for yt-dlp calls  # Manage subprocess creation, IPC, timeout handling, and graceful termination
-  - [ ] Handle download progress callbacks  # Create event system for download progress, speed, ETA, and file size updates
+  - [x] Handle download progress callbacks  # Create event system for download progress, speed, ETA, and file size updates
   - [x] Support various quality options  # Implement quality selection (best, worst, specific resolution) and format handling (mp3, m4a, opus)
   - [x] Manage temp files cleanup  # Implement automatic cleanup of partial downloads and temporary files on process exit/error
 
-- [] **Testing Suite** (Partial)
+- [x] **Testing Suite** (Partial)
   - [x] Test URL generation with various metadata
   - [x] Test video matching algorithms
   - [x] Test binary extraction
-  - [ ] Integration tests for full workflow
+  - [x] Integration tests for full workflow
 
 ## 2. C API Development
 - [ ] **Core API Design**
