@@ -88,7 +88,7 @@ CommandResult YtDLP::execute_command(const string &command)
 #ifdef _WIN32
     // Windows needs temporary files to handle separate streams
     string cmd = command + " 1>stdout.tmp 2>stderr.tmp";
-    result.cmd_exit_code = system(cmd.c_str());  // Capture the return value
+    result.cmd_exit_code = system(cmd.c_str()); // Capture the return value
 
     ifstream stdout_file("stdout.tmp");
     string line;
@@ -109,7 +109,7 @@ CommandResult YtDLP::execute_command(const string &command)
     stderr_file.close();
     remove("stdout.tmp");
     remove("stderr.tmp");
-    
+
     result.cmd_exit_code = result.cmd_exit_code;
     result.ytdlp_exit_code = static_cast<YtDLPExitCodes>(result.cmd_exit_code);
 #else
@@ -160,25 +160,29 @@ void YtDLP::download(DownloadConfig config, const string &url)
     this->config = config;
 
     string command = this->get_path();
-    command += " \"" + url + "\" -x";  // Quote the URL
+    command += " \"" + url + "\" -x"; // Quote the URL
     command += " --audio-format " + this->get_download_file_type();
-    
-    if (config.retries >= 0) {
+
+    if (config.retries >= 0)
+    {
         command += " --retries " + to_string(config.retries);
     }
-    
-    if (config.audio_quality >= 0) {
+
+    if (config.audio_quality >= 0)
+    {
         command += " --audio-quality " + to_string(config.audio_quality);
     }
-    
-    if (config.output) {
-        command += " -o \"" + string(config.output) + "\"";  // Quote the output template
+
+    if (config.output)
+    {
+        command += " -o \"" + string(config.output) + "\""; // Quote the output template
     }
 
     CommandResult result = this->execute_command(command);
 
     // If there's an error message or non-zero exit code, throw an exception
-    if (!result.err.empty() || result.cmd_exit_code != 0) {
+    if (!result.err.empty() || result.cmd_exit_code != 0)
+    {
         string log = "Failed to download: " + url;
         string error_details = result.err.empty() ? "" : ": " + result.err;
         THROW_AND_LOG(runtime_error, log, log + error_details);
