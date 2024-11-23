@@ -44,6 +44,7 @@ extern "C"
         // Flag: -o/--output TEMPLATE
         // Example: "%(title)s.%(ext)s"
         // NULL means use yt-dlp default template
+        // ! TODO: make sure this pointer is handled elsewhere, i'm not sure where it's meant to be handled but I assume in each implementation/binding
         const char *output;
 
 
