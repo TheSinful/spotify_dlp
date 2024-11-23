@@ -1,6 +1,8 @@
 #include "metadata.h"
 #include "../../utils/logger.h"
 
+using namespace std; 
+
 Artist Artist::serialize(const nlohmann::json &data)
 {
     if (!data.contains("id") || data["id"].is_null() ||
@@ -8,14 +10,14 @@ Artist Artist::serialize(const nlohmann::json &data)
         !data.contains("uri") || data["uri"].is_null() ||
         !data.contains("external_urls") || data["external_urls"].is_null())
     {
-        std::string log = "Missing required fields in artist JSON response";
-        THROW_AND_LOG(std::runtime_error, log, log);
+        string log = "Missing required fields in artist JSON response";
+        THROW_AND_LOG(runtime_error, log, log);
     }
 
-    std::vector<std::string> urls;
+    vector<string> urls;
     for (const auto &[service, url] : data["external_urls"].items())
     {
-        urls.push_back(url.get<std::string>());
+        urls.push_back(url.get<string>());
     }
 
     Artist artist;
@@ -35,8 +37,8 @@ TrackMetadata TrackMetadata::serialize(const nlohmann::json &data)
         !data.contains("album") || data["album"].is_null() ||
         !data.contains("artists") || data["artists"].is_null())
     {
-        std::string log = "Missing required fields in track JSON response";
-        THROW_AND_LOG(std::runtime_error, log, log);
+        string log = "Missing required fields in track JSON response";
+        THROW_AND_LOG(runtime_error, log, log);
     }
 
     TrackMetadata track;
@@ -46,7 +48,7 @@ TrackMetadata TrackMetadata::serialize(const nlohmann::json &data)
     track.album_name = data["album"]["name"];
     track.album_id = data["album"]["id"];
 
-    std::vector<Artist> artists;
+    vector<Artist> artists;
     for (const auto &artist : data["artists"])
     {
         artists.push_back(Artist::serialize(artist));
@@ -58,7 +60,7 @@ TrackMetadata TrackMetadata::serialize(const nlohmann::json &data)
         LOG_WARN("Track has no artists", "Track {} (ID: {}) has no artists!", track.name, track.id);
     }
 
-    std::vector<std::string> external_urls;
+    vector<string> external_urls;
     for (const auto &[name, value] : data["external_urls"].items())
     {
         external_urls.push_back(value);
@@ -76,8 +78,8 @@ AlbumMetadata AlbumMetadata::serialize(const nlohmann::json &data)
         !data.contains("total_tracks") || data["total_tracks"].is_null() ||
         !data.contains("artists") || data["artists"].is_null())
     {
-        std::string log = "Missing required fields in album JSON response";
-        THROW_AND_LOG(std::runtime_error, log, log);
+        string log = "Missing required fields in album JSON response";
+        THROW_AND_LOG(runtime_error, log, log);
     }
 
     AlbumMetadata album;
@@ -86,7 +88,7 @@ AlbumMetadata AlbumMetadata::serialize(const nlohmann::json &data)
     album.release_date = data["release_date"];
     album.total_tracks = data["total_tracks"];
 
-    std::vector<Artist> artists;
+    vector<Artist> artists;
     for (const auto &artist : data["artists"])
     {
         artists.push_back(Artist::serialize(artist));
@@ -103,7 +105,7 @@ AlbumMetadata AlbumMetadata::serialize(const nlohmann::json &data)
         LOG_WARN("Album has no tracks", "Album {} (ID: {}) has zero tracks!", album.name, album.id);
     }
 
-    std::vector<TrackMetadata> tracks;
+    vector<TrackMetadata> tracks;
     for (const auto &track : data["tracks"]["items"])
     {
         auto track_data = track;
@@ -125,12 +127,12 @@ PlaylistMetadata PlaylistMetadata::serialize(const nlohmann::json &data)
         !data.contains("id") || data["id"].is_null() ||
         !data.contains("tracks") || data["tracks"].is_null())
     {
-        std::string log = "Missing required fields in playlist JSON response";
-        THROW_AND_LOG(std::runtime_error, log, log);
+        string log = "Missing required fields in playlist JSON response";
+        THROW_AND_LOG(runtime_error, log, log);
     }
 
-    playlist.name = data["name"].get<std::string>();
-    playlist.id = data["id"].get<std::string>();
+    playlist.name = data["name"].get<string>();
+    playlist.id = data["id"].get<string>();
     playlist.total_tracks = data["tracks"].value("total", 0);
 
     if (playlist.total_tracks == 0)
@@ -138,7 +140,7 @@ PlaylistMetadata PlaylistMetadata::serialize(const nlohmann::json &data)
         LOG_WARN("Playlist has no tracks.", "Playlist {} (ID: {}) has zero tracks inside!", playlist.name, playlist.id);
     };
 
-    std::vector<TrackMetadata> tracks;
+    vector<TrackMetadata> tracks;
     if (data["tracks"].contains("items") && data["tracks"]["items"].is_array())
     {
         for (const auto &item : data["tracks"]["items"])

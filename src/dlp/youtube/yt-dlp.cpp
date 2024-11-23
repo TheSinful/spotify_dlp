@@ -12,6 +12,8 @@
 #include "./data/yt-dlp-data.h"
 #include "../../utils/logger.h"
 
+using namespace std; 
+
 YtDLP::YtDLP() : program_name(_WIN32 ? "yt_dlp.exe" : "yt_dlp")
 {
     this->get_temp_path();
@@ -26,11 +28,11 @@ YtDLP::YtDLP() : program_name(_WIN32 ? "yt_dlp.exe" : "yt_dlp")
 void YtDLP::extract_yt_dlp_linux()
 {
 #ifdef __linux__
-    std::ofstream outfile(this->yt_dlp_temp_path, std::ios::binary);
+    ofstream outfile(this->yt_dlp_temp_path, ios::binary);
     if (!outfile)
     {
-        std::string log = "Failed to create tempfile for YTDlp (linux).";
-        THROW_AND_LOG(std::runtime_error, log, log);
+        string log = "Failed to create tempfile for YTDlp (linux).";
+        THROW_AND_LOG(runtime_error, log, log);
     }
 
     outfile.write(reinterpret_cast<const char *>(YtDLPData::yt_dlp_linux), YtDLPData::yt_dlp_linux_size);
@@ -39,11 +41,11 @@ void YtDLP::extract_yt_dlp_linux()
 
 void YtDLP::extract_yt_dlp_windows()
 {
-    std::ofstream outfile(this->yt_dlp_temp_path, std::ios::binary);
+    ofstream outfile(this->yt_dlp_temp_path, ios::binary);
     if (!outfile)
     {
-        std::string log = "Failed to create tempfile for YTDlp (windows).";
-        THROW_AND_LOG(std::runtime_error, log, log);
+        string log = "Failed to create tempfile for YTDlp (windows).";
+        THROW_AND_LOG(runtime_error, log, log);
     }
 
     outfile.write(reinterpret_cast<const char *>(YtDLPData::yt_dlp_windows), YtDLPData::yt_dlp_windows_size);
@@ -55,14 +57,14 @@ void YtDLP::get_temp_path()
 #ifdef _WIN32
     wchar_t temp_dir[MAX_PATH];
     GetTempPathW(MAX_PATH, temp_dir);
-    this->yt_dlp_temp_path = std::filesystem::path(temp_dir) / this->program_name;
+    this->yt_dlp_temp_path = filesystem::path(temp_dir) / this->program_name;
 #else
-    std::string temp_path = "/tmp/" + this->program_name; // Added missing slash
-    this->yt_dlp_temp_path = std::filesystem::path(temp_path);
+    string temp_path = "/tmp/" + this->program_name;
+    h this->yt_dlp_temp_path = filesystem::path(temp_path);
 #endif
 }
 
-std::string YtDLP::get_path() const
+string YtDLP::get_path() const
 {
     return this->yt_dlp_temp_path.string();
 }
@@ -78,12 +80,12 @@ bool YtDLP::command_return_ok(YtDLPExitCodes code)
     }
 }
 
-CommandResult YtDLP::execute_command(const std::string &command)
+CommandResult YtDLP::execute_command(const string &command)
 {
     CommandResult result;
-    std::array<char, 128> buffer;
+    array<char, 128> buffer;
 
-    std::string cmd = command + " 2>&1";
+    string cmd = command + " 2>&1";
 
 #ifdef _WIN32
     FILE *pipe = _popen(cmd.c_str(), "r");
@@ -93,8 +95,8 @@ CommandResult YtDLP::execute_command(const std::string &command)
 
     if (!pipe)
     {
-        std::string log = "Failed to execute command: " + command;
-        THROW_AND_LOG(std::runtime_error, log, log);
+        string log = "Failed to execute command: " + command;
+        THROW_AND_LOG(runtime_error, log, log);
     }
 
     // read out
@@ -122,9 +124,16 @@ CommandResult YtDLP::execute_command(const std::string &command)
 void YtDLP::download(DownloadConfig config)
 {
     this->config = config;
+
+    string command;
+    command.append("yt-dlp -x");
+    command.append(this->get_download_file_type());
+    command.append(to_string(config.retries));
+    command.append(to_string(config.audio_quality));
+    command.append(config.output);
 }
 
-std::string YtDLP::convert_download_file_type()
+string YtDLP::get_download_file_type()
 {
     switch (this->config.download_file_type)
     {
