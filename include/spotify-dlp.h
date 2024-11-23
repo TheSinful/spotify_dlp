@@ -37,7 +37,7 @@ extern "C"
         // Audio quality for transcoding
         // Flag: --audio-quality QUALITY
         // Range: 0-10 (0=best, 10=worst)
-        // Default: 5, -1 means use default
+        // Default: 10, -1 means use default
         int audio_quality;
 
         // Output template for downloaded files
@@ -46,7 +46,9 @@ extern "C"
         // NULL means use yt-dlp default template
         const char *output;
 
-                // algorithim options
+
+
+        // algorithim options
         double minimum_match_score; // 0.0 - 1.0 default 0.7
     } DownloadConfig;
 
