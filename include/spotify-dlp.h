@@ -5,6 +5,11 @@
 extern "C"
 {
 #endif
+    typedef enum
+    {
+        OK,
+        ERROR_DIRECTORY_PATH_NOT_ALLOWED
+    } Return;
 
     typedef enum
     {
@@ -47,22 +52,44 @@ extern "C"
         // ! TODO: make sure this pointer is handled elsewhere, i'm not sure where it's meant to be handled but I assume in each implementation/binding
         const char *output;
 
-
-
         // algorithim options
         double minimum_match_score; // 0.0 - 1.0 default 0.7
+
+        Return error;
     } DownloadConfig;
 
-    static inline DownloadConfig dlp_create_default_download_config(void)
-    {
-        DownloadConfig config = {
-            .download_file_type = BEST,
-            .retries = 10,
-            .audio_quality = 10,
-            .output = NULL,
-            .minimum_match_score = 0.7};
-        return config;
-    }
+    /**
+     * Creates a default DownloadConfig.
+     *
+     * @return DownloadConfig config = {
+                .download_file_type = BEST,
+                .retries = 10,
+                .audio_quality = 10,
+                .output = NULL,
+                .minimum_match_score = 0.7,
+                .error = OK};
+     */
+    static inline DownloadConfig dlp_create_default_download_config(void);
+
+    /**
+     * Creates a default config with custom output path formatting.
+     *
+     * Takes a file path and automatically formats it for yt-dlp by replacing or adding
+     * the %(ext)s template variable.
+     *
+     * @param path      Path where the file should be downloaded.
+     *                  - If path includes extension (e.g. ".mp3"), it will be replaced with %(ext)s
+     *                  - If no extension, %(ext)s will be appended
+     *                  - If NULL, uses yt-dlp default output template
+     *
+     * @return DownloadConfig with default values and formatted output path
+     *
+     * @example
+     * const char* path1 = "C:\\Music\\Song.mp3";     // Becomes: C:\Music\Song.%(ext)s
+     * const char* path2 = "C:\\Music\\Song";         // Becomes: C:\Music\Song.%(ext)s
+     * DownloadConfig config = dlp_create_default_config_with_download_path(path1);
+     */
+    static inline DownloadConfig dlp_create_default_config_with_download_path(const char *path);
 
 #ifdef __cplusplus
 }
