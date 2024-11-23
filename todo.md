@@ -27,7 +27,7 @@
 
 ## 2. C API Development
 - [ ] **Core API Design**
-  - [ ] Define C-compatible data structures  # Design FFI-safe structs for metadata, download options, and progress info
+  - [x] Define C-compatible data structures  # Design FFI-safe structs for metadata, download options, and progress info
   - [ ] Create error handling system  # Implement error codes, thread-local error contexts, and error propagation
   - [ ] Implement memory management functions  # Create allocation/deallocation functions with clear ownership semantics
   - [ ] Design thread-safe operations  # Ensure all operations are thread-safe using mutex/atomic operations where needed
