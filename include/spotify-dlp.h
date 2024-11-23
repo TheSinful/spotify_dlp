@@ -1,6 +1,8 @@
 #ifndef SPOTIFY_DLP_H
 #define SPOTIFY_DLP_H
 
+#include <string>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -69,7 +71,7 @@ extern "C"
                 .minimum_match_score = 0.7,
                 .error = OK};
      */
-    static inline DownloadConfig dlp_create_default_download_config(void);
+    static inline DownloadConfig dlp_create_default_download_config();
 
     /**
      * Creates a default config with custom output path formatting.
@@ -89,7 +91,7 @@ extern "C"
      * const char* path2 = "C:\\Music\\Song";         // Becomes: C:\Music\Song.%(ext)s
      * DownloadConfig config = dlp_create_default_config_with_download_path(path1);
      */
-    static inline DownloadConfig dlp_create_default_config_with_download_path(const char *path);
+    static inline DownloadConfig dlp_create_default_config_with_download_path(const std::string& path);
 
 #ifdef __cplusplus
 }
