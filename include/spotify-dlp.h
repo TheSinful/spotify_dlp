@@ -53,21 +53,19 @@ extern "C"
         double minimum_match_score; // 0.0 - 1.0 default 0.7
     } DownloadConfig;
 
-    DownloadConfig dlp_create_default_download_config(void);
+    static inline DownloadConfig dlp_create_default_download_config(void)
+    {
+        DownloadConfig config = {
+            .download_file_type = BEST,
+            .retries = 10,
+            .audio_quality = 10,
+            .output = NULL,
+            .minimum_match_score = 0.7};
+        return config;
+    }
 
 #ifdef __cplusplus
 }
 #endif
-
-static inline DownloadConfig dlp_create_default_download_config(void)
-{
-    DownloadConfig config = {
-        .download_file_type = BEST,
-        .retries = 10,
-        .audio_quality = 10,
-        .output = NULL,
-        .minimum_match_score = 0.7};
-    return config;
-}
 
 #endif // SPOTIFY_DLP_H

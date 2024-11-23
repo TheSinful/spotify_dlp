@@ -12,7 +12,7 @@
 #include "./data/yt-dlp-data.h"
 #include "../../utils/logger.h"
 
-using namespace std; 
+using namespace std;
 
 YtDLP::YtDLP() : program_name(_WIN32 ? "yt_dlp.exe" : "yt_dlp")
 {
@@ -85,52 +85,118 @@ CommandResult YtDLP::execute_command(const string &command)
     CommandResult result;
     array<char, 128> buffer;
 
-    string cmd = command + " 2>&1";
-
 #ifdef _WIN32
-    FILE *pipe = _popen(cmd.c_str(), "r");
-#else
-    FILE *pipe = popen(cmd.c_str(), "r");
-#endif
+    // Windows needs temporary files to handle separate streams
+    string cmd = command + " 1>stdout.tmp 2>stderr.tmp";
+    result.cmd_exit_code = system(cmd.c_str());  // Capture the return value
 
-    if (!pipe)
+    ifstream stdout_file("stdout.tmp");
+    string line;
+    while (getline(stdout_file, line))
+    {
+        LOG_INFO(line, line);
+        result.out += line + "\n";
+    }
+
+    ifstream stderr_file("stderr.tmp");
+    while (getline(stderr_file, line))
+    {
+        LOG_ERROR(line, line);
+        result.err += line + "\n";
+    }
+
+    stdout_file.close();
+    stderr_file.close();
+    remove("stdout.tmp");
+    remove("stderr.tmp");
+    
+    // On Windows, system() returns the raw exit code
+    result.ytdlp_exit_code = static_cast<YtDLPExitCodes>(result.cmd_exit_code);
+#else
+    // On Linux we can use popen twice to read both streams
+    FILE *stdout_pipe = popen((command + " 2>/dev/null").c_str(), "r");
+    FILE *stderr_pipe = popen((command + " 2>&1 1>/dev/null").c_str(), "r");
+
+    if (!stdout_pipe || !stderr_pipe)
     {
         string log = "Failed to execute command: " + command;
         THROW_AND_LOG(runtime_error, log, log);
     }
 
-    // read out
-    while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
+    // Read stdout
+    while (fgets(buffer.data(), buffer.size(), stdout_pipe) != nullptr)
     {
-        result.out += buffer.data();
+        string line = buffer.data();
+        if (!line.empty() && line[line.length() - 1] == '\n')
+        {
+            line.pop_back();
+        }
+        LOG_INFO(line);
+        result.out += line + "\n";
     }
 
-#ifdef _WIN32
-    result.cmd_exit_code = _pclose(pipe);
-#else
-    result.cmd_exit_code = pclose(pipe);
+    // Read stderr
+    while (fgets(buffer.data(), buffer.size(), stderr_pipe) != nullptr)
+    {
+        string line = buffer.data();
+        if (!line.empty() && line[line.length() - 1] == '\n')
+        {
+            line.pop_back();
+        }
+        LOG_ERROR(line);
+        result.err += line + "\n";
+    }
+
+    result.cmd_exit_code = pclose(stdout_pipe);
+    pclose(stderr_pipe);
 #endif
 
-    // shift right by 8 to get actual exit code on windows
+    // Process exit code
 #ifdef _WIN32
     result.ytdlp_exit_code = static_cast<YtDLPExitCodes>(result.cmd_exit_code >> 8);
 #else
-    result.ytdlp_exit_code = static_cast<YtDLPErrorCodes>(WEXITSTATUS(result.cmd_exit_code));
+    result.ytdlp_exit_code = static_cast<YtDLPExitCodes>(WEXITSTATUS(result.cmd_exit_code));
 #endif
 
     return result;
 }
 
-void YtDLP::download(DownloadConfig config)
+void YtDLP::download(DownloadConfig config, const string &url)
 {
     this->config = config;
 
     string command;
-    command.append("yt-dlp -x");
+    command.append("yt-dlp" + url + "-x");
     command.append(this->get_download_file_type());
     command.append(to_string(config.retries));
     command.append(to_string(config.audio_quality));
     command.append(config.output);
+
+    CommandResult result = this->execute_command(command);
+
+    string log;
+    string error_details = result.err.empty() ? "" : ": " + result.err;
+
+    switch (result.ytdlp_exit_code)
+    {
+    case YtDLPExitCodes::Success:
+        return;
+    case YtDLPExitCodes::UpdateRequired:
+        log = "YT-DLP update required!";
+        THROW_AND_LOG(runtime_error, log, log + error_details);
+    case YtDLPExitCodes::CancelledByMaxDownloads:
+        log = "Reached set max downloads.";
+        THROW_AND_LOG(runtime_error, log, log + error_details);
+    case YtDLPExitCodes::UserOptionsError:
+        log = "Error in user options!";
+        THROW_AND_LOG(runtime_error, log, log + " when attempting to download " + url + error_details);
+    case YtDLPExitCodes::GenericError:
+        log = "Generic YT-DLP error occurred!";
+        THROW_AND_LOG(runtime_error, log, log + " when attempting to download " + url + error_details);
+    default:
+        log = "Unknown error occurred!";
+        THROW_AND_LOG(runtime_error, log, log + " Exit code: " + to_string(result.ytdlp_exit_code) + error_details);
+    }
 }
 
 string YtDLP::get_download_file_type()

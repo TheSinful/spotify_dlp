@@ -29,12 +29,16 @@ struct CommandResult
 class YtDLP
 {
 #ifdef BUILD_TEST
-    FRIEND_TEST(YtDLPTest_TestWindowsExtraction_Test, TestWindowsExtraction);
+    FRIEND_TEST(YtDLPTest, TestWindowsExtraction);
+    FRIEND_TEST(YtDLPTest, TestExecuteCommand);
+    FRIEND_TEST(YtDLPTest, TestInvalidCommand);
+    FRIEND_TEST(YtDLPTest, TestStdErrOutput);
+    FRIEND_TEST(YtDLPTest, TestMultilineOutput);
 #endif
 
 public:
     YtDLP();
-    void download(DownloadConfig config);
+    void download(DownloadConfig config, const std::string &url);
 
     std::string get_path() const;
 
