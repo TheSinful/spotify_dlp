@@ -15,15 +15,15 @@ extern "C"
 
     typedef enum
     {
-        MP3,    // --extract-audio  mp3
-        M4A,    // --extract-audio  m4a
-        OPUS,   // --extract-audio  opus
-        VORBIS, // --extract-audio  vorbis
-        WAV,    // --extract-audio  wav
-        BEST,   // --extract-audio  best
-        AAC,    // --extract-audio  aac
-        ALAC,   // --extract-audio  alac
-        FLAC,   // --extract-audio  flac
+        MP3,
+        M4A,
+        OPUS,
+        VORBIS,
+        WAV,
+        BEST,
+        AAC,
+        ALAC,
+        FLAC,
     } DownloadFileType;
 
     typedef struct DownloadConfig
@@ -91,7 +91,7 @@ extern "C"
      * const char* path2 = "C:\\Music\\Song";         // Becomes: C:\Music\Song.%(ext)s
      * DownloadConfig config = dlp_create_default_config_with_download_path(path1);
      */
-    static inline DownloadConfig dlp_create_default_config_with_download_path(const std::string& path);
+    static inline DownloadConfig dlp_create_default_config_with_download_path(const std::string &path);
 
 #ifdef __cplusplus
 }
