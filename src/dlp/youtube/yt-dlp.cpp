@@ -110,7 +110,7 @@ CommandResult YtDLP::execute_command(const string &command)
     remove("stdout.tmp");
     remove("stderr.tmp");
     
-    // On Windows, system() returns the raw exit code
+    result.cmd_exit_code = result.cmd_exit_code;
     result.ytdlp_exit_code = static_cast<YtDLPExitCodes>(result.cmd_exit_code);
 #else
     // On Linux we can use popen twice to read both streams
@@ -149,12 +149,6 @@ CommandResult YtDLP::execute_command(const string &command)
 
     result.cmd_exit_code = pclose(stdout_pipe);
     pclose(stderr_pipe);
-#endif
-
-    // Process exit code
-#ifdef _WIN32
-    result.ytdlp_exit_code = static_cast<YtDLPExitCodes>(result.cmd_exit_code >> 8);
-#else
     result.ytdlp_exit_code = static_cast<YtDLPExitCodes>(WEXITSTATUS(result.cmd_exit_code));
 #endif
 
@@ -165,14 +159,30 @@ void YtDLP::download(DownloadConfig config, const string &url)
 {
     this->config = config;
 
-    string command;
-    command.append("yt-dlp" + url + "-x");
-    command.append(this->get_download_file_type());
-    command.append(to_string(config.retries));
-    command.append(to_string(config.audio_quality));
-    command.append(config.output);
+    string command = this->get_path();
+    command += " \"" + url + "\" -x";  // Quote the URL
+    command += " --audio-format " + this->get_download_file_type();
+    
+    if (config.retries >= 0) {
+        command += " --retries " + to_string(config.retries);
+    }
+    
+    if (config.audio_quality >= 0) {
+        command += " --audio-quality " + to_string(config.audio_quality);
+    }
+    
+    if (config.output) {
+        command += " -o \"" + string(config.output) + "\"";  // Quote the output template
+    }
 
     CommandResult result = this->execute_command(command);
+
+    // If there's an error message or non-zero exit code, throw an exception
+    if (!result.err.empty() || result.cmd_exit_code != 0) {
+        string log = "Failed to download: " + url;
+        string error_details = result.err.empty() ? "" : ": " + result.err;
+        THROW_AND_LOG(runtime_error, log, log + error_details);
+    }
 
     string log;
     string error_details = result.err.empty() ? "" : ": " + result.err;
