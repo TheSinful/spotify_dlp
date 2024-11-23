@@ -39,7 +39,7 @@ public:
     std::string get_path() const;
 
 private:
-    std::string convert_download_file_type();
+    std::string get_download_file_type();
     void extract_yt_dlp_windows();
     void extract_yt_dlp_linux();
     void get_temp_path();
