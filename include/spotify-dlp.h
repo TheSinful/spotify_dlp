@@ -2,6 +2,7 @@
 #define SPOTIFY_DLP_H
 
 #include <string>
+#include <filesystem>
 
 #ifdef __cplusplus
 extern "C"
@@ -28,6 +29,7 @@ extern "C"
 
     typedef struct DownloadConfig
     {
+
         // note: -x is set on by default
 
         // yt-dlp flags
@@ -71,7 +73,17 @@ extern "C"
                 .minimum_match_score = 0.7,
                 .error = OK};
      */
-    static inline DownloadConfig dlp_create_default_download_config();
+    static inline DownloadConfig dlp_create_default_download_config()
+    {
+        DownloadConfig config;
+        config.download_file_type = BEST;
+        config.retries = 10;
+        config.audio_quality = 10;
+        config.output = NULL;
+        config.minimum_match_score = 0.7;
+        config.error = OK;
+        return config;
+    }
 
     /**
      * Creates a default config with custom output path formatting.
@@ -91,7 +103,51 @@ extern "C"
      * const char* path2 = "C:\\Music\\Song";         // Becomes: C:\Music\Song.%(ext)s
      * DownloadConfig config = dlp_create_default_config_with_download_path(path1);
      */
-    static inline DownloadConfig dlp_create_default_config_with_download_path(const std::string &path);
+    static inline DownloadConfig dlp_create_default_config_with_download_path(const char *path)
+    {
+        DownloadConfig config;
+        config.download_file_type = BEST;
+        config.retries = 10;
+        config.audio_quality = 10;
+        config.output = nullptr;
+        config.minimum_match_score = 0.7;
+        config.error = OK;
+
+        if (path == nullptr || strlen(path) == 0)
+            return config;
+
+        if (std::filesystem::is_directory(path))
+        {
+            config.error = ERROR_DIRECTORY_PATH_NOT_ALLOWED;
+            return config;
+        }
+
+        const char *dot_pos = strrchr(path, '.');
+        char *new_path;
+        size_t path_len = strlen(path);
+
+        if (dot_pos != nullptr)
+        {
+            size_t base_len = dot_pos - path;
+            new_path = new char[base_len + 9]; // +9 for ".%(ext)s\0"
+            strncpy(new_path, path, base_len);
+            strcpy(new_path + base_len, ".%(ext)s");
+        }
+        else
+        {
+            new_path = new char[path_len + 9]; // +9 for ".%(ext)s\0"
+            strcpy(new_path, path);
+            strcat(new_path, ".%(ext)s");
+        }
+
+        config.output = new_path;
+        return config;
+    }
+
+    static inline Return download(DownloadConfig config, const char *url, const char *spotify_client_id, const char *spotify_client_secret, const char *youtube_api_key)
+    {
+        return OK;
+    }
 
 #ifdef __cplusplus
 }
