@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 #include "../src/dlp/youtube/yt-dlp.h"
+#include "../include/spotify-dlp.h"
 
-using namespace std; 
+using namespace std;
 
 class YtDLPTest : public testing::Test
 {
@@ -100,11 +101,13 @@ TEST_F(YtDLPTest, TestDownloadGenericError)
     auto config = dlp_create_default_download_config();
     const string test_url = "https://www.youtube.com/watch?v=ThisIsAnInvalidVideoId123456789";
 
-    try {
+    try
+    {
         dlp.download(config, test_url);
         FAIL() << "Expected runtime_error";
     }
-    catch(const runtime_error& e) {
+    catch (const runtime_error &e)
+    {
         SUCCEED();
     }
 }
