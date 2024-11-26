@@ -175,12 +175,11 @@ void YtDLP::download(DownloadConfig config, const string &url)
 
     if (config.output)
     {
-        command += " -o \"" + string(config.output) + "\""; // Quote the output template
+        command += " -o \"" + string(config.output) + "\"";
     }
 
     CommandResult result = this->execute_command(command);
 
-    // If there's an error message or non-zero exit code, throw an exception
     if (!result.err.empty() || result.cmd_exit_code != 0)
     {
         string log = "Failed to download: " + url;
