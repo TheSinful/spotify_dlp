@@ -37,11 +37,13 @@ class YtDLP
     FRIEND_TEST(YtDLPTest, TestDownloadSuccess);
     FRIEND_TEST(YtDLPTest, TestDownloadWithCustomConfig);
     FRIEND_TEST(YtDLPTest, TestDownloadGenericError);
+    FRIEND_TEST(YtDLPTest, TestGetRealOutputPath);
+    FRIEND_TEST(YtDLPTest, TestGetRealOutputPathMissing);
 #endif
 
 public:
     YtDLP();
-    void download(DownloadConfig config, const std::string &url);
+    std::filesystem::path download(DownloadConfig config, const std::string &url);
 
     std::string get_path() const;
 
@@ -52,6 +54,7 @@ private:
     void extract_yt_dlp_windows();
     void extract_yt_dlp_linux();
     void get_temp_path();
+    std::filesystem::path get_real_output_path(const CommandResult &result);
 
     std::filesystem::path yt_dlp_temp_path;
     std::string program_name;

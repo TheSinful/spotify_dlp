@@ -111,6 +111,46 @@ vector<SearchResult> Youtube::parse_response(const string &response)
     return results;
 }
 
+vector<SearchResult> Youtube::try_parse_response(const string &response) {
+    vector<SearchResult> results;
+    try {
+        auto json = nlohmann::json::parse(response);
+        LOG_INFO("Parsed JSON response", "Response: " + response);
+
+        if (!json.contains("items")) {
+            if (json.contains("error")) {
+                LOG_ERROR("YouTube API error", 
+                    "Error details: " + json["error"].dump());
+            }
+            return results; // Return empty results to trigger retry
+        }
+
+        for (const auto &item : json["items"]) {
+            SearchResult result;
+            result.video_id = item["id"]["videoId"];
+            result.title = item["snippet"]["title"];
+            result.artist = item["snippet"]["channelTitle"];
+            result.score = calculate_match_score(result);
+            results.push_back(result);
+        }
+
+        sort(results.begin(), results.end(),
+             [](const SearchResult &a, const SearchResult &b) {
+                 return a.score > b.score;
+             });
+    } 
+    catch (const nlohmann::json::exception& e) {
+        LOG_ERROR("JSON parsing error", 
+            "Failed to parse response: " + string(e.what()) + "\nResponse: " + response);
+    }
+    return results;
+}
+
+void Youtube::sleep_between_retries(int retry_count) const {
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(RETRY_DELAY_MS * retry_count));
+}
+
 double Youtube::calculate_match_score(const SearchResult &result)
 {
     if (this->is_track())
@@ -244,10 +284,9 @@ URL Youtube::get_music_url(SearchResult search_result)
     return "https://music.youtube.com/watch?v=" + search_result.video_id;
 }
 
-vector<URL> Youtube::search(AnyMetadata metadata)
+vector<URL> Youtube::search()
 {
     LOG_INFO("Creating youtube search query.", "Creating youtube search query");
-    this->metadata = metadata;
     if (this->is_track())
     {
         TrackMetadata track = get<TrackMetadata>(metadata);
@@ -275,12 +314,27 @@ vector<URL> Youtube::search(AnyMetadata metadata)
 
     for (const auto &query : this->queries)
     {
-        string response = this->make_search_request(query);
-        vector<SearchResult> search_results = this->parse_response(response);
+        vector<SearchResult> search_results;
+        string response;
+        
+        for (int retry = 0; retry < MAX_RETRIES; retry++) {
+            if (retry > 0) {
+                LOG_INFO("Retrying search", 
+                    "Attempt " + to_string(retry + 1) + " of " + to_string(MAX_RETRIES));
+                sleep_between_retries(retry);
+            }
 
-        if (search_results.empty())
-        {
-            LOG_INFO("No results found", "No results found for query: " + query);
+            response = this->make_search_request(query);
+            search_results = this->try_parse_response(response);
+            
+            if (!search_results.empty()) {
+                break;
+            }
+        }
+
+        if (search_results.empty()) {
+            LOG_INFO("No results found", 
+                "No valid results after " + to_string(MAX_RETRIES) + " attempts for query: " + query);
             continue;
         }
 
@@ -300,3 +354,21 @@ vector<URL> Youtube::search(AnyMetadata metadata)
     return urls;
 }
 
+DownloadPaths Youtube::download(AnyMetadata metadata) {
+    this->metadata = metadata;
+    vector<URL> urls = this->search();
+    vector<filesystem::path> downloaded_paths;
+    
+    for (const auto &url : urls) {
+        std::string log = "URL " + url + " at path (in output) " + this->config.output;
+        LOG_INFO("Downloading " + log, "Downloading " + log);
+        
+        filesystem::path downloaded_path = this->downloader.download(this->config, url);
+        downloaded_paths.push_back(downloaded_path);
+        
+        LOG_INFO("Downloaded to " + downloaded_path.string(), 
+                "Downloaded " + log + " to " + downloaded_path.string());
+    }
+
+    return downloaded_paths;
+}

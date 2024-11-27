@@ -76,23 +76,18 @@ TEST_F(YtDLPTest, TestMultilineOutput)
 
 TEST_F(YtDLPTest, TestDownloadSuccess)
 {
-    auto config = dlp_create_default_download_config();
-    const string test_url = "https://www.youtube.com/watch?v=lsRqIwS9Iho";
-
-    EXPECT_NO_THROW(dlp.download(config, test_url));
+    // ...remove existing test as it's been split into more specific tests above...
 }
 
 TEST_F(YtDLPTest, TestDownloadWithCustomConfig)
 {
-    auto config = dlp_create_default_download_config();
+    auto config = dlp_create_default_config_with_download_path("D:\\coding\\spotify_dlp\\build\\Testing\\Temporary");
     config.download_file_type = MP3;
     config.retries = 5;
     config.audio_quality = 0;
-    config.output = "%(title)s.%(ext)s";
 
     const string test_url = "https://www.youtube.com/watch?v=lsRqIwS9Iho";
 
-    // TODO: Verify command construction with custom config
     EXPECT_NO_THROW(dlp.download(config, test_url));
 }
 
@@ -109,5 +104,99 @@ TEST_F(YtDLPTest, TestDownloadGenericError)
     catch (const runtime_error &e)
     {
         SUCCEED();
+    }
+}
+
+TEST_F(YtDLPTest, TestGetRealOutputPath)
+{
+    CommandResult result;
+    result.out = R"([download] Destination: temp.webm
+[ExtractAudio] Destination: output.mp3
+[download] 100% of 5.00MiB)";
+
+    auto path = dlp.get_real_output_path(result);
+    EXPECT_EQ(path.filename().string(), "output.mp3");
+}
+
+TEST_F(YtDLPTest, TestGetRealOutputPathMissing)
+{
+    CommandResult result;
+    result.out = "[download] 100% of 5.00MiB";
+
+    EXPECT_THROW(dlp.get_real_output_path(result), std::runtime_error);
+}
+
+TEST_F(YtDLPTest, TestDownloadReturnsPath)
+{
+    auto config = dlp_create_default_download_config();
+    const string test_url = "https://www.youtube.com/watch?v=lsRqIwS9Iho";
+
+    auto path = dlp.download(config, test_url);
+    EXPECT_FALSE(path.empty());
+    EXPECT_TRUE(filesystem::exists(path));
+}
+
+TEST_F(YtDLPTest, TestDownloadWithCustomOutputPath)
+{
+    auto config = dlp_create_default_config_with_download_path("test_output");
+    const string test_url = "https://www.youtube.com/watch?v=lsRqIwS9Iho";
+
+    auto path = dlp.download(config, test_url);
+    EXPECT_FALSE(path.empty());
+
+    // Test the filename properties
+    EXPECT_EQ(path.stem().string(), "test_output");
+
+    // Get the absolute paths for comparison
+    auto current_path = std::filesystem::absolute(std::filesystem::current_path());
+    auto parent_path = std::filesystem::absolute(path.parent_path());
+    EXPECT_EQ(parent_path, current_path);
+}
+
+TEST_F(YtDLPTest, TestDownloadPathConfig)
+{
+    const string test_url = "https://www.youtube.com/watch?v=lsRqIwS9Iho";
+
+    // Test with specific filename
+    {
+        auto config = dlp_create_default_config_with_download_path("test_file.mp3");
+        auto path = dlp.download(config, test_url);
+        EXPECT_EQ(path.stem().string(), "test_file");
+        EXPECT_TRUE(filesystem::exists(path));
+    }
+
+    // Test with path without extension
+    {
+        auto config = dlp_create_default_config_with_download_path("test_file");
+        auto path = dlp.download(config, test_url);
+        EXPECT_EQ(path.stem().string(), "test_file");
+        EXPECT_TRUE(filesystem::exists(path));
+    }
+
+    // Test with directory path (should fail)
+    {
+        auto config = dlp_create_default_config_with_download_path(".");
+        EXPECT_EQ(config.error, ERROR_DIRECTORY_PATH_NOT_ALLOWED);
+    }
+
+    // Test with relative path
+    {
+        auto config = dlp_create_default_config_with_download_path("./downloads/test_file.mp3");
+        filesystem::create_directories("downloads");
+        auto path = dlp.download(config, test_url);
+        EXPECT_EQ(path.parent_path().filename().string(), "downloads");
+        EXPECT_EQ(path.stem().string(), "test_file");
+        EXPECT_TRUE(filesystem::exists(path));
+        filesystem::remove_all("downloads");
+    }
+
+    // Test with absolute path
+    {
+        filesystem::path abs_path = filesystem::absolute("test_absolute.mp3");
+        auto config = dlp_create_default_config_with_download_path(abs_path.string().c_str());
+        auto path = dlp.download(config, test_url);
+        EXPECT_EQ(path.stem().string(), "test_absolute");
+        EXPECT_EQ(path.parent_path(), abs_path.parent_path());
+        EXPECT_TRUE(filesystem::exists(path));
     }
 }

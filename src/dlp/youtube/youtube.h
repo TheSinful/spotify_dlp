@@ -6,11 +6,12 @@
 #include <nlohmann/json.hpp>
 #include "../../../include/spotify-dlp.h"
 #include "../spotify/metadata.h"
+#include "../spotify/api.h"
 #include "yt-dlp.h"
 #include "search_builder.h"
 
-using AnyMetadata = std::variant<TrackMetadata, AlbumMetadata, PlaylistMetadata>;
 using URL = std::string;
+using DownloadPaths = std::vector<std::filesystem::path>; 
 
 struct SearchResult
 {
@@ -40,15 +41,22 @@ class Youtube
     FRIEND_TEST(YoutubeTest, CalculateTitleSimilarityTest);
     FRIEND_TEST(YoutubeTest, NormalizeStringTest);
     FRIEND_TEST(YoutubeTest, ParseResponseTest);
+    FRIEND_TEST(YoutubeTest, DownloadSong);
 #endif
 
 public:
     Youtube(std::string yt_api_key, DownloadConfig config);
-    std::vector<URL> search(AnyMetadata metadata);
-    std::vector<std::filesystem::path> download();
+    DownloadPaths download(AnyMetadata data);
 
 private:
+    static constexpr int MAX_RETRIES = 3;
+    static constexpr int RETRY_DELAY_MS = 1000;
+
+    std::vector<SearchResult> try_parse_response(const std::string &response);
+    void sleep_between_retries(int retry_count) const;
+
     // searching
+    std::vector<URL> search();
     bool is_track();
     bool is_album();    // for albums we will try to find an album that exactly matches and download each song from that, if we cannot find an exact match we will just search for all the tracks individually instead.
     bool is_playlist(); // for playlists we will just iterate thru each song and download each like that.

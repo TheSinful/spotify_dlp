@@ -1,10 +1,10 @@
-
 #include <gtest/gtest.h>
 #include <typeinfo>
 #include <variant>
 #include "../src/dlp/spotify/metadata.h"
 #include "../src/dlp/spotify/api.h"
 #include "../src/dlp/youtube/youtube.h"
+#include "../../../build/_deps/fmt-src/test/gtest/gtest/gtest.h"
 
 class YoutubeTest : public ::testing::Test
 {
@@ -166,4 +166,23 @@ TEST_F(YoutubeTest, ParseResponseTest)
     EXPECT_EQ(results[0].video_id, "test123");
     EXPECT_EQ(results[0].title, "Test Track");
     EXPECT_EQ(results[0].artist, "Test Artist");
+}
+
+TEST_F(YoutubeTest, DownloadSong) {
+    std::string test_url = "https://open.spotify.com/track/0PHrcmOtDE89ew4vVEaD7S?si=2276b867b5774fa7";
+    AnyMetadata metadata = api.get_metadata(test_url);
+
+    DownloadConfig config = dlp_create_default_config_with_download_path(
+        "D:\\coding\\spotify_dlp\\tests\\dlp\\youtube\\toreup");
+    config.minimum_match_score = 0.5; // Lower the match score for testing
+    Youtube yt(api_key, config);
+
+    ASSERT_NO_THROW({
+        auto downloaded = yt.download(metadata);
+        EXPECT_FALSE(downloaded.empty()) << "Expected at least one downloaded file";
+        if (!downloaded.empty()) {
+            EXPECT_TRUE(std::filesystem::exists(downloaded[0])) 
+                << "Downloaded file doesn't exist: " << downloaded[0].string();
+        }
+    }) << "Download failed unexpectedly";
 }

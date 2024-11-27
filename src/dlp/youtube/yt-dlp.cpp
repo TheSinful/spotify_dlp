@@ -155,8 +155,35 @@ CommandResult YtDLP::execute_command(const string &command)
     return result;
 }
 
-void YtDLP::download(DownloadConfig config, const string &url)
-{
+std::filesystem::path YtDLP::get_real_output_path(const CommandResult& result) {
+    std::istringstream stream(result.out);
+    std::string line;
+    std::filesystem::path final_path;
+
+    while (std::getline(stream, line)) {
+        // Check for normal download/extract paths
+        if (line.find("[ExtractAudio] Destination: ") == 0 || 
+            line.find("[download] Destination: ") == 0) {
+            size_t prefix_len = line.find("Destination: ") + 13;
+            final_path = std::filesystem::absolute(line.substr(prefix_len));
+        }
+        // Check for already downloaded files
+        else if (line.find("[download] ") == 0 && line.find(" has already been downloaded") != std::string::npos) {
+            size_t start = line.find("[download] ") + 11;
+            size_t end = line.find(" has already been downloaded");
+            std::string filename = line.substr(start, end - start);
+            final_path = std::filesystem::absolute(filename);
+        }
+    }
+
+    if (final_path.empty()) {
+        throw std::runtime_error("Could not find output path in yt-dlp output");
+    }
+
+    return final_path;
+}
+
+std::filesystem::path YtDLP::download(DownloadConfig config, const std::string& url) {
     this->config = config;
 
     string command = this->get_path();
@@ -187,29 +214,8 @@ void YtDLP::download(DownloadConfig config, const string &url)
         THROW_AND_LOG(runtime_error, log, log + error_details);
     }
 
-    string log;
-    string error_details = result.err.empty() ? "" : ": " + result.err;
-
-    switch (result.ytdlp_exit_code)
-    {
-    case YtDLPExitCodes::Success:
-        return;
-    case YtDLPExitCodes::UpdateRequired:
-        log = "YT-DLP update required!";
-        THROW_AND_LOG(runtime_error, log, log + error_details);
-    case YtDLPExitCodes::CancelledByMaxDownloads:
-        log = "Reached set max downloads.";
-        THROW_AND_LOG(runtime_error, log, log + error_details);
-    case YtDLPExitCodes::UserOptionsError:
-        log = "Error in user options!";
-        THROW_AND_LOG(runtime_error, log, log + " when attempting to download " + url + error_details);
-    case YtDLPExitCodes::GenericError:
-        log = "Generic YT-DLP error occurred!";
-        THROW_AND_LOG(runtime_error, log, log + " when attempting to download " + url + error_details);
-    default:
-        log = "Unknown error occurred!";
-        THROW_AND_LOG(runtime_error, log, log + " Exit code: " + to_string(result.ytdlp_exit_code) + error_details);
-    }
+    // Get the actual output path from yt-dlp output
+    return get_real_output_path(result);
 }
 
 string YtDLP::get_download_file_type()
